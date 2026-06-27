@@ -1,0 +1,15 @@
+.next
+out
+node_modules
+coverage
+playwright-report
+test-results
+*.tsbuildinfo
+.agents/
+.codex/
+.wrangler/
+outputs/
+work/
+firebase-debug.log
+.dev.vars*
+wrangler*.log

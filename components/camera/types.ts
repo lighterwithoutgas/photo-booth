@@ -1,0 +1,1 @@
+export type MediaStreamLike = MediaStream;
