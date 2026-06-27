@@ -20,7 +20,11 @@ export type FrameId =
   | "white"
   | "couple"
   | "friends"
-  | "birthday";
+  | "birthday"
+  | "moonlit"
+  | "botanical"
+  | "cherry"
+  | "loveletters";
 export type BorderId = "ink" | "soft" | "none";
 
 export interface PhotoItem {

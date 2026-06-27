@@ -10,16 +10,71 @@ const PHOTO_HEIGHT = 720;
 const PHOTO_GAP = 62;
 const PHOTO_TOP = 120;
 
-const COUPLE_TEMPLATE = {
-  source: { x: 203, y: 47, width: 452, height: 1652 },
-  outputHeight: Math.round((1652 / 452) * STRIP_WIDTH),
-  slots: [
-    { left: 93, top: 133, right: 365, bottom: 410 },
-    { left: 90, top: 525, right: 359, bottom: 799 },
-    { left: 92, top: 875, right: 360, bottom: 1146 },
-    { left: 91, top: 1242, right: 360, bottom: 1514 },
-  ],
-} as const;
+interface PaperTemplate {
+  image: string;
+  source: { x: number; y: number; width: number; height: number };
+  slots: { left: number; top: number; right: number; bottom: number }[];
+  radius?: number;
+  caption?: { left: number; top: number; right: number; bottom: number };
+}
+
+const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
+  couple: {
+    image: "/papers/couple-handmade-original.png",
+    source: { x: 203, y: 47, width: 452, height: 1652 },
+    slots: [
+      { left: 93, top: 133, right: 365, bottom: 410 },
+      { left: 90, top: 525, right: 359, bottom: 799 },
+      { left: 92, top: 875, right: 360, bottom: 1146 },
+      { left: 91, top: 1242, right: 360, bottom: 1514 },
+    ],
+  },
+  moonlit: {
+    image: "/papers/moonlit-dreams.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 132, top: 185, right: 592, bottom: 559 },
+      { left: 132, top: 594, right: 592, bottom: 968 },
+      { left: 132, top: 1004, right: 592, bottom: 1376 },
+      { left: 132, top: 1411, right: 592, bottom: 1785 },
+    ],
+    radius: 34,
+    caption: { left: 137, top: 1819, right: 587, bottom: 2012 },
+  },
+  botanical: {
+    image: "/papers/botanical-garden.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 162, top: 147, right: 564, bottom: 546 },
+      { left: 162, top: 578, right: 563, bottom: 975 },
+      { left: 162, top: 1009, right: 564, bottom: 1408 },
+      { left: 162, top: 1444, right: 564, bottom: 1844 },
+    ],
+    radius: 34,
+  },
+  cherry: {
+    image: "/papers/cherry-doodles.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 128, top: 165, right: 592, bottom: 560 },
+      { left: 130, top: 609, right: 591, bottom: 989 },
+      { left: 131, top: 1034, right: 590, bottom: 1411 },
+      { left: 133, top: 1455, right: 587, bottom: 1973 },
+    ],
+    radius: 36,
+  },
+  loveletters: {
+    image: "/papers/love-letters.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 161, top: 159, right: 562, bottom: 568 },
+      { left: 161, top: 653, right: 562, bottom: 1058 },
+      { left: 161, top: 1147, right: 562, bottom: 1553 },
+      { left: 161, top: 1641, right: 562, bottom: 2045 },
+    ],
+    radius: 35,
+  },
+};
 
 const framePalette: Record<FrameId, { background: string; ink: string; accent: string }> = {
   cream: { background: "#e9dfc4", ink: "#232a2e", accent: "#a44d3d" },
@@ -31,6 +86,10 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
   couple: { background: "#e8c9c2", ink: "#74454c", accent: "#a95460" },
   friends: { background: "#d5ddcb", ink: "#3f5b58", accent: "#b7755c" },
   birthday: { background: "#ead8a9", ink: "#594968", accent: "#b95e66" },
+  moonlit: { background: "#e8d4ef", ink: "#7041a0", accent: "#f4c56f" },
+  botanical: { background: "#e9e4bd", ink: "#5f6334", accent: "#c66f45" },
+  cherry: { background: "#fff1d7", ink: "#932a28", accent: "#ca4943" },
+  loveletters: { background: "#f9d7dc", ink: "#b83f59", accent: "#e58fa0" },
 };
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
@@ -38,7 +97,22 @@ export function stripDimensions(scale = 1): { width: number; height: number } {
 }
 
 export function coupleStripDimensions(scale = 1): { width: number; height: number } {
-  return { width: STRIP_WIDTH * scale, height: COUPLE_TEMPLATE.outputHeight * scale };
+  return paperStripDimensions("couple", scale);
+}
+
+export function paperStripDimensions(frame: FrameId, scale = 1): { width: number; height: number } {
+  const template = PAPER_TEMPLATES[frame];
+  const height = template ? Math.round((template.source.height / template.source.width) * STRIP_WIDTH) : STRIP_HEIGHT;
+  return { width: STRIP_WIDTH * scale, height: height * scale };
+}
+
+export function stripCutPositions(frame: FrameId): [number, number, number] {
+  const template = PAPER_TEMPLATES[frame];
+  if (!template) return [22.6, 42.7, 62.8];
+  return [0, 1, 2].map((index) => {
+    const gapMiddle = (template.slots[index].bottom + template.slots[index + 1].top) / 2;
+    return (gapMiddle / template.source.height) * 100;
+  }) as [number, number, number];
 }
 
 export async function loadImage(source: string): Promise<HTMLImageElement> {
@@ -144,9 +218,9 @@ function handStroke(
   });
 }
 
-function coupleSlot(index: number): { x: number; y: number; width: number; height: number } {
-  const source = COUPLE_TEMPLATE.slots[index];
-  const scale = STRIP_WIDTH / COUPLE_TEMPLATE.source.width;
+function templateSlot(template: PaperTemplate, index: number): { x: number; y: number; width: number; height: number } {
+  const source = template.slots[index];
+  const scale = STRIP_WIDTH / template.source.width;
   return {
     x: source.left * scale,
     y: source.top * scale,
@@ -155,15 +229,64 @@ function coupleSlot(index: number): { x: number; y: number; width: number; heigh
   };
 }
 
-function traceCoupleSlot(context: CanvasRenderingContext2D, index: number): void {
-  const slot = coupleSlot(index);
-  const wobble = 3.5;
+function traceTemplateSlot(context: CanvasRenderingContext2D, template: PaperTemplate, index: number): void {
+  const slot = templateSlot(template, index);
   context.beginPath();
-  context.moveTo(slot.x + wobble, slot.y + 1);
-  context.lineTo(slot.x + slot.width - wobble, slot.y);
-  context.lineTo(slot.x + slot.width, slot.y + slot.height - wobble);
-  context.lineTo(slot.x + wobble, slot.y + slot.height);
+  if (!template.radius) {
+    const wobble = 3.5;
+    context.moveTo(slot.x + wobble, slot.y + 1);
+    context.lineTo(slot.x + slot.width - wobble, slot.y);
+    context.lineTo(slot.x + slot.width, slot.y + slot.height - wobble);
+    context.lineTo(slot.x + wobble, slot.y + slot.height);
+    context.closePath();
+    return;
+  }
+
+  const radius = template.radius * (STRIP_WIDTH / template.source.width);
+  context.moveTo(slot.x + radius, slot.y);
+  context.lineTo(slot.x + slot.width - radius, slot.y);
+  context.quadraticCurveTo(slot.x + slot.width, slot.y, slot.x + slot.width, slot.y + radius);
+  context.lineTo(slot.x + slot.width, slot.y + slot.height - radius);
+  context.quadraticCurveTo(slot.x + slot.width, slot.y + slot.height, slot.x + slot.width - radius, slot.y + slot.height);
+  context.lineTo(slot.x + radius, slot.y + slot.height);
+  context.quadraticCurveTo(slot.x, slot.y + slot.height, slot.x, slot.y + slot.height - radius);
+  context.lineTo(slot.x, slot.y + radius);
+  context.quadraticCurveTo(slot.x, slot.y, slot.x + radius, slot.y);
   context.closePath();
+}
+
+function drawTemplateCaption(
+  context: CanvasRenderingContext2D,
+  template: PaperTemplate,
+  options: StripOptions,
+  ink: string,
+): void {
+  if (!template.caption) return;
+  const scale = STRIP_WIDTH / template.source.width;
+  const panel = template.caption;
+  const x = ((panel.left + panel.right) / 2) * scale;
+  const y = panel.top * scale;
+  const width = (panel.right - panel.left) * scale;
+  const height = (panel.bottom - panel.top) * scale;
+  const text = options.footerText || "tiny moments, kept";
+
+  context.save();
+  context.fillStyle = ink;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  let fontSize = 54;
+  do {
+    context.font = `700 ${fontSize}px 'Segoe Print', cursive`;
+    fontSize -= 2;
+  } while (context.measureText(text).width > width * 0.84 && fontSize > 28);
+  context.fillText(text, x, y + height * 0.43);
+  if (options.showDate) {
+    const date = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date());
+    context.globalAlpha = 0.78;
+    context.font = "italic 31px Georgia, serif";
+    context.fillText(date, x, y + height * 0.68);
+  }
+  context.restore();
 }
 
 function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
@@ -304,18 +427,18 @@ export async function renderStripCanvas(
   format: "image/png" | "image/jpeg" = "image/png",
 ): Promise<HTMLCanvasElement> {
   if (photos.length !== 4) throw new Error("Exactly four photos are required.");
-  const usesOriginalCoupleArtwork = options.frame === "couple";
+  const template = PAPER_TEMPLATES[options.frame];
   const canvas = document.createElement("canvas");
   canvas.width = STRIP_WIDTH;
-  canvas.height = usesOriginalCoupleArtwork ? COUPLE_TEMPLATE.outputHeight : STRIP_HEIGHT;
+  canvas.height = paperStripDimensions(options.frame).height;
   const context = canvas.getContext("2d", { alpha: format === "image/png" });
   if (!context) throw new Error("Canvas is not supported by this browser.");
 
   const palette = framePalette[options.frame];
-  if (usesOriginalCoupleArtwork) {
-    const template = await loadImage("/papers/couple-handmade-original.png");
-    const source = COUPLE_TEMPLATE.source;
-    context.drawImage(template, source.x, source.y, source.width, source.height, 0, 0, canvas.width, canvas.height);
+  if (template) {
+    const artwork = await loadImage(template.image);
+    const source = template.source;
+    context.drawImage(artwork, source.x, source.y, source.width, source.height, 0, 0, canvas.width, canvas.height);
   } else {
     context.fillStyle = palette.background;
     context.fillRect(0, 0, canvas.width, canvas.height);
@@ -324,7 +447,7 @@ export async function renderStripCanvas(
 
   const images = await Promise.all(photos.map((photo) => loadImage(photo.url)));
   images.forEach((image, index) => {
-    const slot = usesOriginalCoupleArtwork ? coupleSlot(index) : null;
+    const slot = template ? templateSlot(template, index) : null;
     const targetWidth = slot ? Math.round(slot.width) : PHOTO_WIDTH;
     const targetHeight = slot ? Math.round(slot.height) : PHOTO_HEIGHT;
     const y = slot ? slot.y : PHOTO_TOP + index * (PHOTO_HEIGHT + PHOTO_GAP);
@@ -339,9 +462,9 @@ export async function renderStripCanvas(
       const pixels = photoContext.getImageData(0, 0, targetWidth, targetHeight);
       photoContext.putImageData(applyFilterToImageData(pixels, options.filter), 0, 0);
     }
-    if (usesOriginalCoupleArtwork && slot) {
+    if (template && slot) {
       context.save();
-      traceCoupleSlot(context, index);
+      traceTemplateSlot(context, template, index);
       context.clip();
       context.drawImage(photoCanvas, slot.x, slot.y, slot.width, slot.height);
       context.restore();
@@ -353,7 +476,7 @@ export async function renderStripCanvas(
     context.strokeStyle = options.border === "soft" ? `${palette.ink}66` : palette.ink;
     context.lineWidth = options.border === "soft" || options.frame === "white" ? 5 : 10;
     context.lineJoin = "round";
-    if (options.border !== "none" && options.frame !== "couple") {
+    if (options.border !== "none" && !template) {
       roughLine(context, PHOTO_X - 5, y - 5, PHOTO_X + PHOTO_WIDTH + 4, y - 2, 4);
       roughLine(context, PHOTO_X + PHOTO_WIDTH + 4, y - 2, PHOTO_X + PHOTO_WIDTH + 6, y + PHOTO_HEIGHT + 5, 4);
       roughLine(context, PHOTO_X + PHOTO_WIDTH + 6, y + PHOTO_HEIGHT + 5, PHOTO_X - 5, y + PHOTO_HEIGHT + 3, 4);
@@ -362,7 +485,10 @@ export async function renderStripCanvas(
     context.restore();
   });
 
-  if (usesOriginalCoupleArtwork) return canvas;
+  if (template) {
+    drawTemplateCaption(context, template, options, palette.ink);
+    return canvas;
+  }
 
   drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 

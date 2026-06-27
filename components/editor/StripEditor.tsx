@@ -17,7 +17,13 @@ const frames: { id: FrameId; name: string; color: string; ink: string; previewIm
   { id: "couple", name: "Your handmade paper", color: "#f3cdd0", ink: "#913447", previewImage: "/papers/couple-handmade-original.png" },
   { id: "friends", name: "Best friends", color: "#d5ddcb", ink: "#3f5b58" },
   { id: "birthday", name: "Birthday confetti", color: "#ead8a9", ink: "#594968" },
+  { id: "moonlit", name: "Moonlit dreams", color: "#e8d4ef", ink: "#7041a0", previewImage: "/papers/moonlit-dreams.png" },
+  { id: "botanical", name: "Botanical garden", color: "#e9e4bd", ink: "#5f6334", previewImage: "/papers/botanical-garden.png" },
+  { id: "cherry", name: "Cherry doodles", color: "#fff1d7", ink: "#932a28", previewImage: "/papers/cherry-doodles.png" },
+  { id: "loveletters", name: "Love letters", color: "#f9d7dc", ink: "#b83f59", previewImage: "/papers/love-letters.png" },
 ];
+
+const artistPaperFrames = new Set<FrameId>(["couple", "moonlit", "botanical", "cherry", "loveletters"]);
 
 export const DEFAULT_STRIP_OPTIONS: StripOptions = {
   filter: "original",
@@ -142,7 +148,7 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
 
         <fieldset>
           <legend className="control-label">3. Add the finishing notes</legend>
-          {options.frame === "couple" ? (
+          {artistPaperFrames.has(options.frame) ? (
             <p className="rounded-xl border-2 border-dashed border-rust/45 bg-[#f3cdd0]/55 p-4 text-sm font-semibold text-ink/75">
               This artist paper keeps its original hand-drawn borders and finish exactly as designed.
             </p>

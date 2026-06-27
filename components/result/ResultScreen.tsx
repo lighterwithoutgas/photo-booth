@@ -3,7 +3,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Download, Images, Palette, RefreshCcw, Scissors, Share2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { canvasToBlob, renderIndividualPhoto, renderStripCanvas } from "@/lib/canvas";
+import { canvasToBlob, renderIndividualPhoto, renderStripCanvas, stripCutPositions } from "@/lib/canvas";
 import { downloadBlob, individualPhotosFilename, stripFilename } from "@/lib/download";
 import { shareStrip } from "@/lib/share";
 import { createZip } from "@/lib/zip";
@@ -25,7 +25,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   const [message, setMessage] = useState("");
   const [individualFiles, setIndividualFiles] = useState<File[]>([]);
   const reduceMotion = useReducedMotion();
-  const cutPositions = options.frame === "couple" ? [28.3, 50.6, 72.4] : [22.6, 42.7, 62.8];
+  const cutPositions = stripCutPositions(options.frame);
 
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
 
