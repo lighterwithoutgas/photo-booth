@@ -7,14 +7,14 @@ import { canvasToBlob, renderStripCanvas } from "@/lib/canvas";
 import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
 import { SketchButton } from "@/components/ui/SketchButton";
 
-const frames: { id: FrameId; name: string; color: string; ink: string }[] = [
+const frames: { id: FrameId; name: string; color: string; ink: string; previewImage?: string }[] = [
   { id: "cream", name: "Classic cream", color: "#e9dfc4", ink: "#232a2e" },
   { id: "charcoal", name: "Dark charcoal", color: "#24282a", ink: "#f4efe3" },
   { id: "red", name: "Warm red", color: "#9c4035", ink: "#fff7e8" },
   { id: "pink", name: "Pastel pink", color: "#e7b8b0", ink: "#332c2a" },
   { id: "doodle", name: "Doodle paper", color: "#f2ead8", ink: "#6f7f67" },
   { id: "white", name: "Minimal white", color: "#fffdf7", ink: "#22292e" },
-  { id: "couple", name: "Couple keepsake", color: "#e8c9c2", ink: "#74454c" },
+  { id: "couple", name: "Your handmade paper", color: "#f3cdd0", ink: "#913447", previewImage: "/papers/couple-handmade-original.png" },
   { id: "friends", name: "Best friends", color: "#d5ddcb", ink: "#3f5b58" },
   { id: "birthday", name: "Birthday confetti", color: "#ead8a9", ink: "#594968" },
 ];
@@ -119,7 +119,20 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
           <legend className="control-label">2. Choose the paper</legend>
           <div className="flex flex-wrap gap-3">
             {frames.map((frame) => (
-              <button key={frame.id} onClick={() => setOption("frame", frame.id)} className={`frame-swatch ${options.frame === frame.id ? "frame-swatch--selected" : ""}`} style={{ background: frame.color, color: frame.ink }} aria-label={frame.name} aria-pressed={options.frame === frame.id}>
+              <button
+                key={frame.id}
+                onClick={() => setOption("frame", frame.id)}
+                className={`frame-swatch ${options.frame === frame.id ? "frame-swatch--selected" : ""}`}
+                style={{
+                  background: frame.color,
+                  backgroundImage: frame.previewImage ? `url(${frame.previewImage})` : undefined,
+                  backgroundPosition: "top center",
+                  backgroundSize: "cover",
+                  color: frame.ink,
+                }}
+                aria-label={frame.name}
+                aria-pressed={options.frame === frame.id}
+              >
                 {options.frame === frame.id && <Check size={18} />}
               </button>
             ))}
@@ -129,14 +142,22 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
 
         <fieldset>
           <legend className="control-label">3. Add the finishing notes</legend>
-          <div className="mb-4 grid grid-cols-3 gap-2" aria-label="Photo border style">
-            {([['ink', 'Sketchy'], ['soft', 'Soft'], ['none', 'Borderless']] as const).map(([id, label]) => (
-              <button key={id} onClick={() => setOption("border", id)} className={`choice-chip ${options.border === id ? "choice-chip--selected" : ""}`} aria-pressed={options.border === id}>{label}</button>
-            ))}
-          </div>
-          <label className="block text-sm font-semibold" htmlFor="footerText">Footer text</label>
-          <input id="footerText" className="sketch-input mt-2" maxLength={36} value={options.footerText} onChange={(event) => setOption("footerText", event.target.value)} />
-          <label className="check-row mt-4"><input type="checkbox" checked={options.showDate} onChange={(event) => setOption("showDate", event.target.checked)} /> Add today&apos;s date</label>
+          {options.frame === "couple" ? (
+            <p className="rounded-xl border-2 border-dashed border-rust/45 bg-[#f3cdd0]/55 p-4 text-sm font-semibold text-ink/75">
+              This artist paper keeps its original hand-drawn borders and finish exactly as designed.
+            </p>
+          ) : (
+            <>
+              <div className="mb-4 grid grid-cols-3 gap-2" aria-label="Photo border style">
+                {([['ink', 'Sketchy'], ['soft', 'Soft'], ['none', 'Borderless']] as const).map(([id, label]) => (
+                  <button key={id} onClick={() => setOption("border", id)} className={`choice-chip ${options.border === id ? "choice-chip--selected" : ""}`} aria-pressed={options.border === id}>{label}</button>
+                ))}
+              </div>
+              <label className="block text-sm font-semibold" htmlFor="footerText">Footer text</label>
+              <input id="footerText" className="sketch-input mt-2" maxLength={36} value={options.footerText} onChange={(event) => setOption("footerText", event.target.value)} />
+              <label className="check-row mt-4"><input type="checkbox" checked={options.showDate} onChange={(event) => setOption("showDate", event.target.checked)} /> Add today&apos;s date</label>
+            </>
+          )}
         </fieldset>
 
         <div className="flex flex-wrap items-center gap-3 border-t-2 border-dashed border-ink/30 pt-5">

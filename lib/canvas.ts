@@ -10,6 +10,17 @@ const PHOTO_HEIGHT = 720;
 const PHOTO_GAP = 62;
 const PHOTO_TOP = 120;
 
+const COUPLE_TEMPLATE = {
+  source: { x: 203, y: 47, width: 452, height: 1652 },
+  outputHeight: Math.round((1652 / 452) * STRIP_WIDTH),
+  slots: [
+    { left: 93, top: 133, right: 365, bottom: 410 },
+    { left: 90, top: 525, right: 359, bottom: 799 },
+    { left: 92, top: 875, right: 360, bottom: 1146 },
+    { left: 91, top: 1242, right: 360, bottom: 1514 },
+  ],
+} as const;
+
 const framePalette: Record<FrameId, { background: string; ink: string; accent: string }> = {
   cream: { background: "#e9dfc4", ink: "#232a2e", accent: "#a44d3d" },
   charcoal: { background: "#24282a", ink: "#f4efe3", accent: "#c6a66a" },
@@ -24,6 +35,10 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
   return { width: STRIP_WIDTH * scale, height: STRIP_HEIGHT * scale };
+}
+
+export function coupleStripDimensions(scale = 1): { width: number; height: number } {
+  return { width: STRIP_WIDTH * scale, height: COUPLE_TEMPLATE.outputHeight * scale };
 }
 
 export async function loadImage(source: string): Promise<HTMLImageElement> {
@@ -129,6 +144,28 @@ function handStroke(
   });
 }
 
+function coupleSlot(index: number): { x: number; y: number; width: number; height: number } {
+  const source = COUPLE_TEMPLATE.slots[index];
+  const scale = STRIP_WIDTH / COUPLE_TEMPLATE.source.width;
+  return {
+    x: source.left * scale,
+    y: source.top * scale,
+    width: (source.right - source.left) * scale,
+    height: (source.bottom - source.top) * scale,
+  };
+}
+
+function traceCoupleSlot(context: CanvasRenderingContext2D, index: number): void {
+  const slot = coupleSlot(index);
+  const wobble = 3.5;
+  context.beginPath();
+  context.moveTo(slot.x + wobble, slot.y + 1);
+  context.lineTo(slot.x + slot.width - wobble, slot.y);
+  context.lineTo(slot.x + slot.width, slot.y + slot.height - wobble);
+  context.lineTo(slot.x + wobble, slot.y + slot.height);
+  context.closePath();
+}
+
 function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
   context.save();
   context.strokeStyle = color;
@@ -168,38 +205,6 @@ function drawHeart(context: CanvasRenderingContext2D, x: number, y: number, size
   path();
   context.fill();
   handStroke(context, path, color, Math.max(2, size * 0.1), x * 3 + y, 1.5);
-  context.restore();
-}
-
-function traceHeart(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void {
-  context.beginPath();
-  context.moveTo(x + width / 2, y + height);
-  context.bezierCurveTo(x + width * 0.42, y + height * 0.78, x, y + height * 0.55, x, y + height * 0.27);
-  context.bezierCurveTo(x, y - height * 0.02, x + width * 0.34, y - height * 0.08, x + width / 2, y + height * 0.2);
-  context.bezierCurveTo(x + width * 0.66, y - height * 0.08, x + width, y - height * 0.02, x + width, y + height * 0.27);
-  context.bezierCurveTo(x + width, y + height * 0.55, x + width * 0.58, y + height * 0.78, x + width / 2, y + height);
-  context.closePath();
-}
-
-function drawEnvelope(context: CanvasRenderingContext2D, x: number, y: number, width: number, color: string): void {
-  const height = width * 0.68;
-  context.save();
-  applyHandRotation(context, x + width / 2, y + height / 2, x + y);
-  handStroke(context, () => {
-    context.beginPath();
-    context.moveTo(x, y + 1);
-    context.lineTo(x + width, y);
-    context.lineTo(x + width - 1, y + height);
-    context.lineTo(x + 1, y + height - 1);
-    context.closePath();
-    context.moveTo(x, y);
-    context.lineTo(x + width / 2, y + height * 0.58);
-    context.lineTo(x + width, y);
-    context.moveTo(x, y + height);
-    context.lineTo(x + width * 0.36, y + height * 0.48);
-    context.moveTo(x + width, y + height);
-    context.lineTo(x + width * 0.64, y + height * 0.48);
-  }, color, 7, x * 7 + y, 3.5);
   context.restore();
 }
 
@@ -259,26 +264,6 @@ function drawPaperDesign(context: CanvasRenderingContext2D, frame: FrameId, acce
     return;
   }
 
-  if (frame === "couple") {
-    const gapYs = [860, 1642, 2424];
-    drawHeart(context, 52, 58, 28, accent);
-    drawHeart(context, 92, 88, 15, ink);
-    drawEnvelope(context, 1080, 35, 72, ink);
-    [470, 1252, 2034, 2816].forEach((y, index) => {
-      drawHeart(context, index % 2 ? 1138 : 58, y, 18, index % 2 ? ink : accent);
-      drawSpark(context, index % 2 ? 56 : 1142, y + 85, 15, index % 2 ? accent : ink);
-    });
-    gapYs.forEach((y, index) => {
-      drawBow(context, 548, y, 104, index % 2 ? ink : accent);
-      drawHeart(context, 410, y + 4, 15, ink);
-      drawHeart(context, 790, y + 4, 15, accent);
-    });
-    drawEnvelope(context, 48, 3262, 78, ink);
-    drawHeart(context, 1128, 3298, 28, accent);
-    drawSpark(context, 1080, 3330, 18, ink);
-    return;
-  }
-
   if (frame === "friends") {
     [70, 520, 980, 1430, 1880, 2330, 2780, 3260].forEach((y, index) => {
       drawSpark(context, index % 2 ? 1140 : 60, y, index % 3 === 0 ? 25 : 16, index % 2 ? ink : accent);
@@ -319,65 +304,47 @@ export async function renderStripCanvas(
   format: "image/png" | "image/jpeg" = "image/png",
 ): Promise<HTMLCanvasElement> {
   if (photos.length !== 4) throw new Error("Exactly four photos are required.");
+  const usesOriginalCoupleArtwork = options.frame === "couple";
   const canvas = document.createElement("canvas");
   canvas.width = STRIP_WIDTH;
-  canvas.height = STRIP_HEIGHT;
+  canvas.height = usesOriginalCoupleArtwork ? COUPLE_TEMPLATE.outputHeight : STRIP_HEIGHT;
   const context = canvas.getContext("2d", { alpha: format === "image/png" });
   if (!context) throw new Error("Canvas is not supported by this browser.");
 
   const palette = framePalette[options.frame];
-  context.fillStyle = palette.background;
-  context.fillRect(0, 0, canvas.width, canvas.height);
-  drawVintagePaper(context, options.frame, palette.ink);
+  if (usesOriginalCoupleArtwork) {
+    const template = await loadImage("/papers/couple-handmade-original.png");
+    const source = COUPLE_TEMPLATE.source;
+    context.drawImage(template, source.x, source.y, source.width, source.height, 0, 0, canvas.width, canvas.height);
+  } else {
+    context.fillStyle = palette.background;
+    context.fillRect(0, 0, canvas.width, canvas.height);
+    drawVintagePaper(context, options.frame, palette.ink);
+  }
 
   const images = await Promise.all(photos.map((photo) => loadImage(photo.url)));
   images.forEach((image, index) => {
-    const y = PHOTO_TOP + index * (PHOTO_HEIGHT + PHOTO_GAP);
-    const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, PHOTO_WIDTH, PHOTO_HEIGHT);
+    const slot = usesOriginalCoupleArtwork ? coupleSlot(index) : null;
+    const targetWidth = slot ? Math.round(slot.width) : PHOTO_WIDTH;
+    const targetHeight = slot ? Math.round(slot.height) : PHOTO_HEIGHT;
+    const y = slot ? slot.y : PHOTO_TOP + index * (PHOTO_HEIGHT + PHOTO_GAP);
+    const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, targetWidth, targetHeight);
     const photoCanvas = document.createElement("canvas");
-    photoCanvas.width = PHOTO_WIDTH;
-    photoCanvas.height = PHOTO_HEIGHT;
+    photoCanvas.width = targetWidth;
+    photoCanvas.height = targetHeight;
     const photoContext = photoCanvas.getContext("2d", { willReadFrequently: options.filter !== "original" });
     if (!photoContext) throw new Error("Canvas is not supported by this browser.");
-    photoContext.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+    photoContext.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, targetWidth, targetHeight);
     if (options.filter !== "original") {
-      const pixels = photoContext.getImageData(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+      const pixels = photoContext.getImageData(0, 0, targetWidth, targetHeight);
       photoContext.putImageData(applyFilterToImageData(pixels, options.filter), 0, 0);
     }
-    if (options.frame === "couple") {
-      const heartX = 150;
-      const heartY = y + 18;
-      const heartWidth = 900;
-      const heartHeight = 660;
+    if (usesOriginalCoupleArtwork && slot) {
       context.save();
-      traceHeart(context, heartX, heartY, heartWidth, heartHeight);
+      traceCoupleSlot(context, index);
       context.clip();
-      context.drawImage(photoCanvas, heartX, heartY, heartWidth, heartHeight);
-      context.globalAlpha = 0.055;
-      context.fillStyle = palette.ink;
-      context.fillRect(heartX, heartY, heartWidth, heartHeight);
+      context.drawImage(photoCanvas, slot.x, slot.y, slot.width, slot.height);
       context.restore();
-
-      if (options.border !== "none") {
-        context.save();
-        handStroke(
-          context,
-          () => traceHeart(context, heartX, heartY, heartWidth, heartHeight),
-          options.border === "soft" ? `${palette.ink}88` : palette.ink,
-          options.border === "soft" ? 7 : 12,
-          index * 101 + 17,
-          7,
-        );
-        handStroke(
-          context,
-          () => traceHeart(context, heartX + 11, heartY + 8, heartWidth - 22, heartHeight - 18),
-          palette.accent,
-          5,
-          index * 131 + 29,
-          5,
-        );
-        context.restore();
-      }
     } else {
       context.drawImage(photoCanvas, PHOTO_X, y);
     }
@@ -394,6 +361,8 @@ export async function renderStripCanvas(
     }
     context.restore();
   });
+
+  if (usesOriginalCoupleArtwork) return canvas;
 
   drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 

@@ -37,10 +37,11 @@ test("upload flow validates four images and opens the editor", async ({ page }) 
   await expect(page.getByRole("button", { name: "Pastel pink" })).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(warmPreview);
   const pinkPreview = await stripPreview.getAttribute("src");
-  await page.getByRole("button", { name: "Couple keepsake" }).click();
-  await expect(page.getByRole("button", { name: "Couple keepsake" })).toHaveAttribute("aria-pressed", "true");
+  await page.getByRole("button", { name: "Your handmade paper" }).click();
+  await expect(page.getByRole("button", { name: "Your handmade paper" })).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(pinkPreview);
-  await expect(page.getByText("Couple keepsake", { exact: true })).toBeVisible();
+  await expect(page.getByText("Your handmade paper", { exact: true })).toBeVisible();
+  await expect(page.getByText("This artist paper keeps its original hand-drawn borders and finish exactly as designed.")).toBeVisible();
 });
 
 test("camera denial offers the upload fallback", async ({ page }) => {

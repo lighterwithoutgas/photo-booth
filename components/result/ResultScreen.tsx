@@ -25,6 +25,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   const [message, setMessage] = useState("");
   const [individualFiles, setIndividualFiles] = useState<File[]>([]);
   const reduceMotion = useReducedMotion();
+  const cutPositions = options.frame === "couple" ? [28.3, 50.6, 72.4] : [22.6, 42.7, 62.8];
 
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
 
@@ -114,7 +115,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
             <button
               key={line}
               className={`cut-guide ${cuts.includes(line) ? "cut-guide--done" : ""}`}
-              style={{ top: `${line * 20.1 + 2.5}%` }}
+              style={{ top: `${cutPositions[line - 1]}%` }}
               onClick={() => cut(line)}
               aria-label={`Cut between photos ${line} and ${line + 1}`}
             >
