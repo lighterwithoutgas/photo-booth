@@ -11,7 +11,16 @@ export type WorkflowState =
   | "error";
 
 export type FilterId = "original" | "vintage-bw" | "faded" | "warm" | "mono";
-export type FrameId = "cream" | "charcoal" | "red" | "pink" | "doodle" | "white";
+export type FrameId =
+  | "cream"
+  | "charcoal"
+  | "red"
+  | "pink"
+  | "doodle"
+  | "white"
+  | "couple"
+  | "friends"
+  | "birthday";
 export type BorderId = "ink" | "soft" | "none";
 
 export interface PhotoItem {

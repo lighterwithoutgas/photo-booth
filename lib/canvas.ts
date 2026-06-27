@@ -17,6 +17,9 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
   pink: { background: "#e7b8b0", ink: "#332c2a", accent: "#fff5e8" },
   doodle: { background: "#f2ead8", ink: "#20282d", accent: "#6f7f67" },
   white: { background: "#fffdf7", ink: "#22292e", accent: "#d7d1c5" },
+  couple: { background: "#f6d9d8", ink: "#7e3f4a", accent: "#c76b78" },
+  friends: { background: "#dcebdc", ink: "#315d61", accent: "#df8f68" },
+  birthday: { background: "#fff0bf", ink: "#543a69", accent: "#e76f79" },
 };
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
@@ -73,6 +76,82 @@ function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
   context.restore();
 }
 
+function drawHeart(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
+  context.save();
+  context.translate(x, y);
+  context.fillStyle = color;
+  context.beginPath();
+  context.moveTo(0, size * 0.28);
+  context.bezierCurveTo(-size * 0.72, -size * 0.16, -size * 0.48, -size * 0.82, 0, -size * 0.42);
+  context.bezierCurveTo(size * 0.48, -size * 0.82, size * 0.72, -size * 0.16, 0, size * 0.28);
+  context.fill();
+  context.restore();
+}
+
+function drawSpark(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 8;
+  context.lineCap = "round";
+  context.beginPath();
+  context.moveTo(x - size, y);
+  context.lineTo(x + size, y);
+  context.moveTo(x, y - size);
+  context.lineTo(x, y + size);
+  context.moveTo(x - size * 0.6, y - size * 0.6);
+  context.lineTo(x + size * 0.6, y + size * 0.6);
+  context.moveTo(x + size * 0.6, y - size * 0.6);
+  context.lineTo(x - size * 0.6, y + size * 0.6);
+  context.stroke();
+  context.restore();
+}
+
+function drawPaperDesign(context: CanvasRenderingContext2D, frame: FrameId, accent: string, ink: string): void {
+  if (frame === "doodle") {
+    drawDoodles(context, accent);
+    return;
+  }
+
+  if (frame === "couple") {
+    drawHeart(context, 58, 64, 34, accent);
+    drawHeart(context, 1140, 82, 24, ink);
+    drawHeart(context, 68, 3600, 23, ink);
+    drawHeart(context, 1138, 3570, 35, accent);
+    return;
+  }
+
+  if (frame === "friends") {
+    drawSpark(context, 58, 66, 27, accent);
+    drawSpark(context, 1138, 75, 20, ink);
+    drawSpark(context, 66, 3590, 20, ink);
+    drawSpark(context, 1136, 3565, 28, accent);
+    return;
+  }
+
+  if (frame === "birthday") {
+    const confetti = [
+      [46, 60, -0.5, accent], [91, 87, 0.7, ink], [1147, 54, 0.45, accent],
+      [1110, 92, -0.75, ink], [52, 3570, 0.55, ink], [92, 3610, -0.6, accent],
+      [1140, 3560, -0.45, accent], [1100, 3604, 0.8, ink],
+    ] as const;
+    context.save();
+    context.lineWidth = 11;
+    context.lineCap = "round";
+    confetti.forEach(([x, y, angle, color]) => {
+      context.save();
+      context.translate(x, y);
+      context.rotate(angle);
+      context.strokeStyle = color;
+      context.beginPath();
+      context.moveTo(-14, 0);
+      context.lineTo(14, 0);
+      context.stroke();
+      context.restore();
+    });
+    context.restore();
+  }
+}
+
 export async function renderStripCanvas(
   photos: PhotoItem[],
   options: StripOptions,
@@ -118,7 +197,7 @@ export async function renderStripCanvas(
     context.restore();
   });
 
-  if (options.frame === "doodle") drawDoodles(context, palette.accent);
+  drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 
   const footerY = 3435;
   context.save();
