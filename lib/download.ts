@@ -3,6 +3,10 @@ export function stripFilename(extension: "png" | "jpg" = "png", date = new Date(
   return `sketchsnap-photo-strip-${stamp}.${extension}`;
 }
 
+export function individualPhotosFilename(date = new Date()): string {
+  return `sketchsnap-4-photos-${date.toISOString().slice(0, 10)}.zip`;
+}
+
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

@@ -4,8 +4,9 @@ import { useEffect, useMemo, useState } from "react";
 import { Download, Images, Palette, RefreshCcw, Scissors, Share2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
 import { canvasToBlob, renderIndividualPhoto, renderStripCanvas } from "@/lib/canvas";
-import { downloadBlob, stripFilename } from "@/lib/download";
+import { downloadBlob, individualPhotosFilename, stripFilename } from "@/lib/download";
 import { shareStrip } from "@/lib/share";
+import { createZip } from "@/lib/zip";
 import type { PhotoItem, StripOptions } from "@/types/photo";
 import { SketchButton } from "@/components/ui/SketchButton";
 
@@ -56,16 +57,11 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
       return;
     }
     try {
-      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: individualFiles }))) {
-        await navigator.share({ title: "Your four SketchSnap photos", files: individualFiles });
-        setMessage("Four individual photos shared.");
-        return;
-      }
-      individualFiles.forEach((file) => downloadBlob(file, file.name));
-      setMessage("Four individual photos saved.");
-    } catch (error) {
-      if (error instanceof DOMException && error.name === "AbortError") return;
-      setMessage("One of the individual photos could not be saved.");
+      const archive = await createZip(individualFiles);
+      downloadBlob(archive, individualPhotosFilename());
+      setMessage("Four individual photos saved in one ZIP file.");
+    } catch {
+      setMessage("The four-photo ZIP could not be saved.");
     }
   };
 

@@ -101,6 +101,12 @@ test("generates and downloads a finished strip", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: "Download PNG" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^sketchsnap-photo-strip-\d{4}-\d{2}-\d{2}\.png$/);
+  await expect(page.getByRole("button", { name: "Save 4 photos" })).toBeEnabled();
+  const photosDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Save 4 photos" }).click();
+  const photosDownload = await photosDownloadPromise;
+  expect(photosDownload.suggestedFilename()).toMatch(/^sketchsnap-4-photos-\d{4}-\d{2}-\d{2}\.zip$/);
+  await expect(page.getByText("Four individual photos saved in one ZIP file.")).toBeVisible();
 });
 
 test("mobile layout does not overflow", async ({ page }, testInfo) => {
