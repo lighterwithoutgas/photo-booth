@@ -14,9 +14,9 @@ const frames: { id: FrameId; name: string; color: string; ink: string }[] = [
   { id: "pink", name: "Pastel pink", color: "#e7b8b0", ink: "#332c2a" },
   { id: "doodle", name: "Doodle paper", color: "#f2ead8", ink: "#6f7f67" },
   { id: "white", name: "Minimal white", color: "#fffdf7", ink: "#22292e" },
-  { id: "couple", name: "Couple keepsake", color: "#f6d9d8", ink: "#7e3f4a" },
-  { id: "friends", name: "Best friends", color: "#dcebdc", ink: "#315d61" },
-  { id: "birthday", name: "Birthday confetti", color: "#fff0bf", ink: "#543a69" },
+  { id: "couple", name: "Couple keepsake", color: "#e8c9c2", ink: "#74454c" },
+  { id: "friends", name: "Best friends", color: "#d5ddcb", ink: "#3f5b58" },
+  { id: "birthday", name: "Birthday confetti", color: "#ead8a9", ink: "#594968" },
 ];
 
 export const DEFAULT_STRIP_OPTIONS: StripOptions = {

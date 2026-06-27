@@ -17,9 +17,9 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
   pink: { background: "#e7b8b0", ink: "#332c2a", accent: "#fff5e8" },
   doodle: { background: "#f2ead8", ink: "#20282d", accent: "#6f7f67" },
   white: { background: "#fffdf7", ink: "#22292e", accent: "#d7d1c5" },
-  couple: { background: "#f6d9d8", ink: "#7e3f4a", accent: "#c76b78" },
-  friends: { background: "#dcebdc", ink: "#315d61", accent: "#df8f68" },
-  birthday: { background: "#fff0bf", ink: "#543a69", accent: "#e76f79" },
+  couple: { background: "#e8c9c2", ink: "#74454c", accent: "#a95460" },
+  friends: { background: "#d5ddcb", ink: "#3f5b58", accent: "#b7755c" },
+  birthday: { background: "#ead8a9", ink: "#594968", accent: "#b95e66" },
 };
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
@@ -53,6 +53,82 @@ function roughLine(
   context.stroke();
 }
 
+function seededUnit(seed: number): number {
+  const value = Math.sin(seed * 12.9898 + 78.233) * 43758.5453;
+  return value - Math.floor(value);
+}
+
+function drawVintagePaper(context: CanvasRenderingContext2D, frame: FrameId, ink: string): void {
+  if (!(["couple", "friends", "birthday", "doodle"] as FrameId[]).includes(frame)) return;
+
+  context.save();
+  const wash = context.createLinearGradient(0, 0, STRIP_WIDTH, STRIP_HEIGHT);
+  wash.addColorStop(0, "rgba(255,248,225,.12)");
+  wash.addColorStop(0.48, "rgba(113,65,48,.025)");
+  wash.addColorStop(1, "rgba(255,248,225,.08)");
+  context.fillStyle = wash;
+  context.fillRect(0, 0, STRIP_WIDTH, STRIP_HEIGHT);
+
+  context.globalAlpha = 0.045;
+  context.fillStyle = ink;
+  context.fillRect(0, 0, 12, STRIP_HEIGHT);
+  context.fillRect(STRIP_WIDTH - 9, 0, 9, STRIP_HEIGHT);
+  context.fillRect(0, 0, STRIP_WIDTH, 8);
+  context.fillRect(0, STRIP_HEIGHT - 7, STRIP_WIDTH, 7);
+
+  for (let index = 0; index < 280; index += 1) {
+    const x = seededUnit(index + 11) * STRIP_WIDTH;
+    const y = seededUnit(index + 701) * STRIP_HEIGHT;
+    const radius = 0.8 + seededUnit(index + 1401) * 2.8;
+    context.globalAlpha = 0.035 + seededUnit(index + 2101) * 0.045;
+    context.fillStyle = index % 4 === 0 ? "#fff8e9" : ink;
+    context.beginPath();
+    context.ellipse(x, y, radius * 1.6, radius, seededUnit(index + 3101) * Math.PI, 0, Math.PI * 2);
+    context.fill();
+  }
+
+  context.globalAlpha = 0.075;
+  context.strokeStyle = ink;
+  context.lineWidth = 2;
+  for (let index = 0; index < 18; index += 1) {
+    const y = 80 + seededUnit(index + 4001) * (STRIP_HEIGHT - 160);
+    const x = seededUnit(index + 5001) * STRIP_WIDTH;
+    roughLine(context, x, y, x + 8 + seededUnit(index + 6001) * 24, y + seededUnit(index + 7001) * 5, 2);
+  }
+  context.restore();
+}
+
+function applyHandRotation(context: CanvasRenderingContext2D, x: number, y: number, seed: number): void {
+  context.translate(x, y);
+  context.rotate((seededUnit(seed) - 0.5) * 0.075);
+  context.translate(-x, -y);
+}
+
+function handStroke(
+  context: CanvasRenderingContext2D,
+  drawPath: () => void,
+  color: string,
+  width: number,
+  seed: number,
+  jitter = 3,
+): void {
+  [0, 1].forEach((pass) => {
+    context.save();
+    context.translate(
+      (seededUnit(seed + pass * 17) - 0.5) * jitter,
+      (seededUnit(seed + pass * 31) - 0.5) * jitter,
+    );
+    context.globalAlpha = pass === 0 ? 0.88 : 0.36;
+    context.strokeStyle = color;
+    context.lineWidth = pass === 0 ? width : Math.max(2, width * 0.62);
+    context.lineCap = "round";
+    context.lineJoin = "round";
+    drawPath();
+    context.stroke();
+    context.restore();
+  });
+}
+
 function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
   context.save();
   context.strokeStyle = color;
@@ -79,12 +155,19 @@ function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
 function drawHeart(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
   context.save();
   context.translate(x, y);
+  applyHandRotation(context, 0, 0, x + y);
   context.fillStyle = color;
-  context.beginPath();
-  context.moveTo(0, size * 0.28);
-  context.bezierCurveTo(-size * 0.72, -size * 0.16, -size * 0.48, -size * 0.82, 0, -size * 0.42);
-  context.bezierCurveTo(size * 0.48, -size * 0.82, size * 0.72, -size * 0.16, 0, size * 0.28);
+  context.globalAlpha = 0.72;
+  const path = () => {
+    context.beginPath();
+    context.moveTo(0, size * 0.28);
+    context.bezierCurveTo(-size * 0.72, -size * 0.16, -size * 0.48, -size * 0.82, 0, -size * 0.42);
+    context.bezierCurveTo(size * 0.48, -size * 0.82, size * 0.72, -size * 0.16, 0, size * 0.28);
+    context.closePath();
+  };
+  path();
   context.fill();
+  handStroke(context, path, color, Math.max(2, size * 0.1), x * 3 + y, 1.5);
   context.restore();
 }
 
@@ -101,73 +184,72 @@ function traceHeart(context: CanvasRenderingContext2D, x: number, y: number, wid
 function drawEnvelope(context: CanvasRenderingContext2D, x: number, y: number, width: number, color: string): void {
   const height = width * 0.68;
   context.save();
-  context.strokeStyle = color;
-  context.lineWidth = 7;
-  context.lineJoin = "round";
-  context.strokeRect(x, y, width, height);
-  context.beginPath();
-  context.moveTo(x, y);
-  context.lineTo(x + width / 2, y + height * 0.58);
-  context.lineTo(x + width, y);
-  context.moveTo(x, y + height);
-  context.lineTo(x + width * 0.36, y + height * 0.48);
-  context.moveTo(x + width, y + height);
-  context.lineTo(x + width * 0.64, y + height * 0.48);
-  context.stroke();
+  applyHandRotation(context, x + width / 2, y + height / 2, x + y);
+  handStroke(context, () => {
+    context.beginPath();
+    context.moveTo(x, y + 1);
+    context.lineTo(x + width, y);
+    context.lineTo(x + width - 1, y + height);
+    context.lineTo(x + 1, y + height - 1);
+    context.closePath();
+    context.moveTo(x, y);
+    context.lineTo(x + width / 2, y + height * 0.58);
+    context.lineTo(x + width, y);
+    context.moveTo(x, y + height);
+    context.lineTo(x + width * 0.36, y + height * 0.48);
+    context.moveTo(x + width, y + height);
+    context.lineTo(x + width * 0.64, y + height * 0.48);
+  }, color, 7, x * 7 + y, 3.5);
   context.restore();
 }
 
 function drawBow(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
   context.save();
-  context.strokeStyle = color;
-  context.lineWidth = 7;
-  context.lineCap = "round";
-  context.lineJoin = "round";
-  context.beginPath();
-  context.ellipse(x, y, size * 0.46, size * 0.25, -0.25, 0, Math.PI * 2);
-  context.ellipse(x + size, y, size * 0.46, size * 0.25, 0.25, 0, Math.PI * 2);
-  context.stroke();
-  context.beginPath();
-  context.arc(x + size / 2, y, size * 0.18, 0, Math.PI * 2);
-  context.moveTo(x + size * 0.42, y + size * 0.15);
-  context.quadraticCurveTo(x + size * 0.15, y + size * 0.72, x + size * 0.03, y + size * 0.52);
-  context.moveTo(x + size * 0.58, y + size * 0.15);
-  context.quadraticCurveTo(x + size * 0.85, y + size * 0.72, x + size * 0.97, y + size * 0.52);
-  context.stroke();
+  applyHandRotation(context, x + size / 2, y, x + y + size);
+  handStroke(context, () => {
+    context.beginPath();
+    context.ellipse(x, y, size * 0.46, size * 0.25, -0.25, 0, Math.PI * 2);
+    context.ellipse(x + size, y, size * 0.46, size * 0.25, 0.25, 0, Math.PI * 2);
+    context.moveTo(x + size * 0.68, y);
+    context.arc(x + size / 2, y, size * 0.18, 0, Math.PI * 2);
+    context.moveTo(x + size * 0.42, y + size * 0.15);
+    context.quadraticCurveTo(x + size * 0.15, y + size * 0.72, x + size * 0.03, y + size * 0.52);
+    context.moveTo(x + size * 0.58, y + size * 0.15);
+    context.quadraticCurveTo(x + size * 0.85, y + size * 0.72, x + size * 0.97, y + size * 0.52);
+  }, color, 7, x + y * 5, 4);
   context.restore();
 }
 
 function drawBalloon(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
   context.save();
-  context.strokeStyle = color;
-  context.lineWidth = 7;
-  context.beginPath();
-  context.ellipse(x, y, size * 0.62, size, 0, 0, Math.PI * 2);
-  context.moveTo(x, y + size);
-  context.lineTo(x - 8, y + size + 16);
-  context.lineTo(x + 8, y + size + 16);
-  context.closePath();
-  context.moveTo(x, y + size + 16);
-  context.bezierCurveTo(x + 25, y + size + 45, x - 20, y + size + 70, x + 4, y + size + 98);
-  context.stroke();
+  applyHandRotation(context, x, y, x + y + size);
+  handStroke(context, () => {
+    context.beginPath();
+    context.ellipse(x, y, size * 0.62, size, 0, 0, Math.PI * 2);
+    context.moveTo(x, y + size);
+    context.lineTo(x - 8, y + size + 16);
+    context.lineTo(x + 8, y + size + 16);
+    context.closePath();
+    context.moveTo(x, y + size + 16);
+    context.bezierCurveTo(x + 25, y + size + 45, x - 20, y + size + 70, x + 4, y + size + 98);
+  }, color, 7, x * 2 + y, 3.5);
   context.restore();
 }
 
 function drawSpark(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
   context.save();
-  context.strokeStyle = color;
-  context.lineWidth = 8;
-  context.lineCap = "round";
-  context.beginPath();
-  context.moveTo(x - size, y);
-  context.lineTo(x + size, y);
-  context.moveTo(x, y - size);
-  context.lineTo(x, y + size);
-  context.moveTo(x - size * 0.6, y - size * 0.6);
-  context.lineTo(x + size * 0.6, y + size * 0.6);
-  context.moveTo(x + size * 0.6, y - size * 0.6);
-  context.lineTo(x - size * 0.6, y + size * 0.6);
-  context.stroke();
+  applyHandRotation(context, x, y, x + y + size);
+  handStroke(context, () => {
+    context.beginPath();
+    context.moveTo(x - size, y);
+    context.lineTo(x + size, y + 1);
+    context.moveTo(x + 1, y - size);
+    context.lineTo(x, y + size);
+    context.moveTo(x - size * 0.6, y - size * 0.6);
+    context.lineTo(x + size * 0.6, y + size * 0.6);
+    context.moveTo(x + size * 0.6, y - size * 0.6);
+    context.lineTo(x - size * 0.6, y + size * 0.6);
+  }, color, 7, x * 11 + y, 3);
   context.restore();
 }
 
@@ -246,6 +328,7 @@ export async function renderStripCanvas(
   const palette = framePalette[options.frame];
   context.fillStyle = palette.background;
   context.fillRect(0, 0, canvas.width, canvas.height);
+  drawVintagePaper(context, options.frame, palette.ink);
 
   const images = await Promise.all(photos.map((photo) => loadImage(photo.url)));
   images.forEach((image, index) => {
@@ -270,19 +353,29 @@ export async function renderStripCanvas(
       traceHeart(context, heartX, heartY, heartWidth, heartHeight);
       context.clip();
       context.drawImage(photoCanvas, heartX, heartY, heartWidth, heartHeight);
+      context.globalAlpha = 0.055;
+      context.fillStyle = palette.ink;
+      context.fillRect(heartX, heartY, heartWidth, heartHeight);
       context.restore();
 
       if (options.border !== "none") {
         context.save();
-        context.strokeStyle = options.border === "soft" ? `${palette.ink}88` : palette.ink;
-        context.lineWidth = options.border === "soft" ? 7 : 12;
-        context.lineJoin = "round";
-        traceHeart(context, heartX, heartY, heartWidth, heartHeight);
-        context.stroke();
-        context.strokeStyle = palette.accent;
-        context.lineWidth = 5;
-        traceHeart(context, heartX + 10, heartY + 9, heartWidth - 20, heartHeight - 18);
-        context.stroke();
+        handStroke(
+          context,
+          () => traceHeart(context, heartX, heartY, heartWidth, heartHeight),
+          options.border === "soft" ? `${palette.ink}88` : palette.ink,
+          options.border === "soft" ? 7 : 12,
+          index * 101 + 17,
+          7,
+        );
+        handStroke(
+          context,
+          () => traceHeart(context, heartX + 11, heartY + 8, heartWidth - 22, heartHeight - 18),
+          palette.accent,
+          5,
+          index * 131 + 29,
+          5,
+        );
         context.restore();
       }
     } else {
@@ -305,19 +398,29 @@ export async function renderStripCanvas(
   drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 
   const footerY = 3435;
+  const handmadePaper = options.frame === "couple" || options.frame === "friends" || options.frame === "birthday" || options.frame === "doodle";
   context.save();
   context.fillStyle = palette.ink;
   context.textAlign = "center";
-  context.font = "700 56px 'Trebuchet MS', sans-serif";
+  context.globalAlpha = handmadePaper ? 0.88 : 1;
+  context.font = handmadePaper ? "700 58px 'Segoe Print', cursive" : "700 56px 'Trebuchet MS', sans-serif";
   context.fillText(options.footerText || "tiny moments, kept", STRIP_WIDTH / 2, footerY);
-  context.font = "34px 'Trebuchet MS', sans-serif";
+  context.font = handmadePaper ? "italic 34px Georgia, serif" : "34px 'Trebuchet MS', sans-serif";
   const date = options.showDate
     ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date())
     : "";
   context.fillText(date, STRIP_WIDTH / 2, footerY + 68);
-  context.strokeStyle = palette.accent;
-  context.lineWidth = 8;
-  roughLine(context, 390, footerY + 115, 810, footerY + 115, 5);
+  if (handmadePaper) {
+    handStroke(context, () => {
+      context.beginPath();
+      context.moveTo(390, footerY + 115);
+      context.quadraticCurveTo(595, footerY + 124, 810, footerY + 112);
+    }, palette.accent, 7, 909, 5);
+  } else {
+    context.strokeStyle = palette.accent;
+    context.lineWidth = 8;
+    roughLine(context, 390, footerY + 115, 810, footerY + 115, 5);
+  }
   context.restore();
 
   return canvas;
