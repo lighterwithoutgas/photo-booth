@@ -15,7 +15,6 @@ interface PaperTemplate {
   source: { x: number; y: number; width: number; height: number };
   slots: { left: number; top: number; right: number; bottom: number }[];
   radius?: number;
-  caption?: { left: number; top: number; right: number; bottom: number };
 }
 
 const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
@@ -39,7 +38,6 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
       { left: 132, top: 1411, right: 592, bottom: 1785 },
     ],
     radius: 34,
-    caption: { left: 137, top: 1819, right: 587, bottom: 2012 },
   },
   botanical: {
     image: "/papers/botanical-garden.png",
@@ -255,40 +253,6 @@ function traceTemplateSlot(context: CanvasRenderingContext2D, template: PaperTem
   context.closePath();
 }
 
-function drawTemplateCaption(
-  context: CanvasRenderingContext2D,
-  template: PaperTemplate,
-  options: StripOptions,
-  ink: string,
-): void {
-  if (!template.caption) return;
-  const scale = STRIP_WIDTH / template.source.width;
-  const panel = template.caption;
-  const x = ((panel.left + panel.right) / 2) * scale;
-  const y = panel.top * scale;
-  const width = (panel.right - panel.left) * scale;
-  const height = (panel.bottom - panel.top) * scale;
-  const text = options.footerText || "tiny moments, kept";
-
-  context.save();
-  context.fillStyle = ink;
-  context.textAlign = "center";
-  context.textBaseline = "middle";
-  let fontSize = 54;
-  do {
-    context.font = `700 ${fontSize}px 'Segoe Print', cursive`;
-    fontSize -= 2;
-  } while (context.measureText(text).width > width * 0.84 && fontSize > 28);
-  context.fillText(text, x, y + height * 0.43);
-  if (options.showDate) {
-    const date = new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date());
-    context.globalAlpha = 0.78;
-    context.font = "italic 31px Georgia, serif";
-    context.fillText(date, x, y + height * 0.68);
-  }
-  context.restore();
-}
-
 function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
   context.save();
   context.strokeStyle = color;
@@ -485,10 +449,7 @@ export async function renderStripCanvas(
     context.restore();
   });
 
-  if (template) {
-    drawTemplateCaption(context, template, options, palette.ink);
-    return canvas;
-  }
+  if (template) return canvas;
 
   drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 
