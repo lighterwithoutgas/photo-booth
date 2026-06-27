@@ -1,4 +1,4 @@
-import { getFilter } from "@/lib/filters";
+import { applyFilterToImageData } from "@/lib/filters";
 import { calculateCoverCrop } from "@/lib/imageCrop";
 import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
 
@@ -89,15 +89,21 @@ export async function renderStripCanvas(
   context.fillStyle = palette.background;
   context.fillRect(0, 0, canvas.width, canvas.height);
 
-  const filter = getFilter(options.filter);
   const images = await Promise.all(photos.map((photo) => loadImage(photo.url)));
   images.forEach((image, index) => {
     const y = PHOTO_TOP + index * (PHOTO_HEIGHT + PHOTO_GAP);
-    context.save();
-    context.filter = filter.canvas;
     const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, PHOTO_WIDTH, PHOTO_HEIGHT);
-    context.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, PHOTO_X, y, PHOTO_WIDTH, PHOTO_HEIGHT);
-    context.restore();
+    const photoCanvas = document.createElement("canvas");
+    photoCanvas.width = PHOTO_WIDTH;
+    photoCanvas.height = PHOTO_HEIGHT;
+    const photoContext = photoCanvas.getContext("2d", { willReadFrequently: options.filter !== "original" });
+    if (!photoContext) throw new Error("Canvas is not supported by this browser.");
+    photoContext.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+    if (options.filter !== "original") {
+      const pixels = photoContext.getImageData(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
+      photoContext.putImageData(applyFilterToImageData(pixels, options.filter), 0, 0);
+    }
+    context.drawImage(photoCanvas, PHOTO_X, y);
 
     context.save();
     context.strokeStyle = options.border === "soft" ? `${palette.ink}66` : palette.ink;
@@ -151,7 +157,10 @@ export async function renderIndividualPhoto(photo: PhotoItem, filterId: StripOpt
   if (!context) throw new Error("Canvas is not supported by this browser.");
   const image = await loadImage(photo.url);
   const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, canvas.width, canvas.height);
-  context.filter = getFilter(filterId).canvas;
   context.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
+  if (filterId !== "original") {
+    const pixels = context.getImageData(0, 0, canvas.width, canvas.height);
+    context.putImageData(applyFilterToImageData(pixels, filterId), 0, 0);
+  }
   return canvasToBlob(canvas);
 }

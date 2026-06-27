@@ -22,9 +22,23 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   const [cutting, setCutting] = useState(false);
   const [cuts, setCuts] = useState<number[]>([]);
   const [message, setMessage] = useState("");
+  const [individualFiles, setIndividualFiles] = useState<File[]>([]);
   const reduceMotion = useReducedMotion();
 
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
+
+  useEffect(() => {
+    let active = true;
+    Promise.all(photos.map(async (photo, index) => {
+      const image = await renderIndividualPhoto(photo, options.filter);
+      return new File([image], `sketchsnap-photo-${index + 1}.png`, { type: "image/png" });
+    })).then((files) => {
+      if (active) setIndividualFiles(files);
+    }).catch(() => {
+      if (active) setMessage("The individual photos could not be prepared.");
+    });
+    return () => { active = false; };
+  }, [photos, options.filter]);
 
   const downloadJpeg = async () => {
     try {
@@ -37,13 +51,20 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   };
 
   const downloadIndividuals = async () => {
+    if (individualFiles.length !== 4) {
+      setMessage("The individual photos are still being prepared.");
+      return;
+    }
     try {
-      for (let index = 0; index < photos.length; index += 1) {
-        const single = await renderIndividualPhoto(photos[index], options.filter);
-        downloadBlob(single, `sketchsnap-photo-${index + 1}.png`);
+      if (navigator.share && (!navigator.canShare || navigator.canShare({ files: individualFiles }))) {
+        await navigator.share({ title: "Your four SketchSnap photos", files: individualFiles });
+        setMessage("Four individual photos shared.");
+        return;
       }
+      individualFiles.forEach((file) => downloadBlob(file, file.name));
       setMessage("Four individual photos saved.");
-    } catch {
+    } catch (error) {
+      if (error instanceof DOMException && error.name === "AbortError") return;
       setMessage("One of the individual photos could not be saved.");
     }
   };
@@ -75,7 +96,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
           <SketchButton tone="rust" onClick={() => { downloadBlob(blob, stripFilename()); setMessage("PNG saved."); }}><Download size={19} /> Download PNG</SketchButton>
           <SketchButton tone="paper" onClick={downloadJpeg}><Download size={19} /> Download JPEG</SketchButton>
           <SketchButton tone="paper" onClick={share}><Share2 size={19} /> Share strip</SketchButton>
-          <SketchButton tone="paper" onClick={downloadIndividuals}><Images size={19} /> Save 4 photos</SketchButton>
+          <SketchButton tone="paper" onClick={downloadIndividuals} disabled={individualFiles.length !== 4}><Images size={19} /> {individualFiles.length === 4 ? "Save 4 photos" : "Preparing photos…"}</SketchButton>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">

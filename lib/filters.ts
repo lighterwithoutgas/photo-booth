@@ -18,3 +18,40 @@ export const FILTERS: FilterDefinition[] = [
 export function getFilter(id: FilterId): FilterDefinition {
   return FILTERS.find((filter) => filter.id === id) ?? FILTERS[0];
 }
+
+const clamp = (value: number) => Math.max(0, Math.min(255, Math.round(value)));
+
+export function transformPixel(id: FilterId, red: number, green: number, blue: number): [number, number, number] {
+  if (id === "original") return [red, green, blue];
+  const luminance = red * 0.299 + green * 0.587 + blue * 0.114;
+
+  if (id === "vintage-bw") {
+    const silver = ((luminance - 128) * 0.92 + 128) * 1.05;
+    return [clamp(silver * 1.04 + 4), clamp(silver * 1.01 + 2), clamp(silver * 0.91)];
+  }
+
+  if (id === "faded") {
+    const fade = (channel: number) => ((luminance + (channel - luminance) * 0.68 - 128) * 0.88 + 128) * 1.08;
+    return [clamp(fade(red) + 6), clamp(fade(green) + 2), clamp(fade(blue) - 3)];
+  }
+
+  if (id === "warm") {
+    return [clamp(red * 1.08 + 12), clamp(green * 1.02 + 4), clamp(blue * 0.88)];
+  }
+
+  const newsprint = ((luminance - 128) * 1.42 + 128) * 0.95;
+  const value = clamp(newsprint);
+  return [value, value, value];
+}
+
+export function applyFilterToImageData(imageData: ImageData, id: FilterId): ImageData {
+  if (id === "original") return imageData;
+  const { data } = imageData;
+  for (let index = 0; index < data.length; index += 4) {
+    const [red, green, blue] = transformPixel(id, data[index], data[index + 1], data[index + 2]);
+    data[index] = red;
+    data[index + 1] = green;
+    data[index + 2] = blue;
+  }
+  return imageData;
+}

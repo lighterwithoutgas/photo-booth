@@ -13,6 +13,7 @@
 html { background: var(--paper); scroll-behavior: smooth; }
 body { margin: 0; min-width: 320px; font-family: "Avenir Next", Avenir, "Trebuchet MS", sans-serif; }
 button, input { font: inherit; }
+button, label { touch-action: manipulation; }
 button { -webkit-tap-highlight-color: transparent; }
 button:focus-visible, input:focus-visible, label:has(input:focus-visible) {
   outline: 3px solid #2367a0;
