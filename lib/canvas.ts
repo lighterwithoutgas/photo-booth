@@ -88,6 +88,71 @@ function drawHeart(context: CanvasRenderingContext2D, x: number, y: number, size
   context.restore();
 }
 
+function traceHeart(context: CanvasRenderingContext2D, x: number, y: number, width: number, height: number): void {
+  context.beginPath();
+  context.moveTo(x + width / 2, y + height);
+  context.bezierCurveTo(x + width * 0.42, y + height * 0.78, x, y + height * 0.55, x, y + height * 0.27);
+  context.bezierCurveTo(x, y - height * 0.02, x + width * 0.34, y - height * 0.08, x + width / 2, y + height * 0.2);
+  context.bezierCurveTo(x + width * 0.66, y - height * 0.08, x + width, y - height * 0.02, x + width, y + height * 0.27);
+  context.bezierCurveTo(x + width, y + height * 0.55, x + width * 0.58, y + height * 0.78, x + width / 2, y + height);
+  context.closePath();
+}
+
+function drawEnvelope(context: CanvasRenderingContext2D, x: number, y: number, width: number, color: string): void {
+  const height = width * 0.68;
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 7;
+  context.lineJoin = "round";
+  context.strokeRect(x, y, width, height);
+  context.beginPath();
+  context.moveTo(x, y);
+  context.lineTo(x + width / 2, y + height * 0.58);
+  context.lineTo(x + width, y);
+  context.moveTo(x, y + height);
+  context.lineTo(x + width * 0.36, y + height * 0.48);
+  context.moveTo(x + width, y + height);
+  context.lineTo(x + width * 0.64, y + height * 0.48);
+  context.stroke();
+  context.restore();
+}
+
+function drawBow(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 7;
+  context.lineCap = "round";
+  context.lineJoin = "round";
+  context.beginPath();
+  context.ellipse(x, y, size * 0.46, size * 0.25, -0.25, 0, Math.PI * 2);
+  context.ellipse(x + size, y, size * 0.46, size * 0.25, 0.25, 0, Math.PI * 2);
+  context.stroke();
+  context.beginPath();
+  context.arc(x + size / 2, y, size * 0.18, 0, Math.PI * 2);
+  context.moveTo(x + size * 0.42, y + size * 0.15);
+  context.quadraticCurveTo(x + size * 0.15, y + size * 0.72, x + size * 0.03, y + size * 0.52);
+  context.moveTo(x + size * 0.58, y + size * 0.15);
+  context.quadraticCurveTo(x + size * 0.85, y + size * 0.72, x + size * 0.97, y + size * 0.52);
+  context.stroke();
+  context.restore();
+}
+
+function drawBalloon(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
+  context.save();
+  context.strokeStyle = color;
+  context.lineWidth = 7;
+  context.beginPath();
+  context.ellipse(x, y, size * 0.62, size, 0, 0, Math.PI * 2);
+  context.moveTo(x, y + size);
+  context.lineTo(x - 8, y + size + 16);
+  context.lineTo(x + 8, y + size + 16);
+  context.closePath();
+  context.moveTo(x, y + size + 16);
+  context.bezierCurveTo(x + 25, y + size + 45, x - 20, y + size + 70, x + 4, y + size + 98);
+  context.stroke();
+  context.restore();
+}
+
 function drawSpark(context: CanvasRenderingContext2D, x: number, y: number, size: number, color: string): void {
   context.save();
   context.strokeStyle = color;
@@ -113,27 +178,39 @@ function drawPaperDesign(context: CanvasRenderingContext2D, frame: FrameId, acce
   }
 
   if (frame === "couple") {
-    drawHeart(context, 58, 64, 34, accent);
-    drawHeart(context, 1140, 82, 24, ink);
-    drawHeart(context, 68, 3600, 23, ink);
-    drawHeart(context, 1138, 3570, 35, accent);
+    const gapYs = [860, 1642, 2424];
+    drawHeart(context, 52, 58, 28, accent);
+    drawHeart(context, 92, 88, 15, ink);
+    drawEnvelope(context, 1080, 35, 72, ink);
+    [470, 1252, 2034, 2816].forEach((y, index) => {
+      drawHeart(context, index % 2 ? 1138 : 58, y, 18, index % 2 ? ink : accent);
+      drawSpark(context, index % 2 ? 56 : 1142, y + 85, 15, index % 2 ? accent : ink);
+    });
+    gapYs.forEach((y, index) => {
+      drawBow(context, 548, y, 104, index % 2 ? ink : accent);
+      drawHeart(context, 410, y + 4, 15, ink);
+      drawHeart(context, 790, y + 4, 15, accent);
+    });
+    drawEnvelope(context, 48, 3262, 78, ink);
+    drawHeart(context, 1128, 3298, 28, accent);
+    drawSpark(context, 1080, 3330, 18, ink);
     return;
   }
 
   if (frame === "friends") {
-    drawSpark(context, 58, 66, 27, accent);
-    drawSpark(context, 1138, 75, 20, ink);
-    drawSpark(context, 66, 3590, 20, ink);
-    drawSpark(context, 1136, 3565, 28, accent);
+    [70, 520, 980, 1430, 1880, 2330, 2780, 3260].forEach((y, index) => {
+      drawSpark(context, index % 2 ? 1140 : 60, y, index % 3 === 0 ? 25 : 16, index % 2 ? ink : accent);
+      drawHeart(context, index % 2 ? 54 : 1144, y + 105, 12, index % 2 ? accent : ink);
+    });
+    [860, 1642, 2424].forEach((y, index) => drawBow(context, 560, y, 80, index % 2 ? accent : ink));
     return;
   }
 
   if (frame === "birthday") {
-    const confetti = [
-      [46, 60, -0.5, accent], [91, 87, 0.7, ink], [1147, 54, 0.45, accent],
-      [1110, 92, -0.75, ink], [52, 3570, 0.55, ink], [92, 3610, -0.6, accent],
-      [1140, 3560, -0.45, accent], [1100, 3604, 0.8, ink],
-    ] as const;
+    const confetti = Array.from({ length: 24 }, (_, index) => {
+      const left = index % 2 === 0;
+      return [left ? 45 + (index % 3) * 24 : 1155 - (index % 3) * 24, 55 + index * 138, (index % 5 - 2) * 0.35, index % 3 ? ink : accent] as const;
+    });
     context.save();
     context.lineWidth = 11;
     context.lineCap = "round";
@@ -149,6 +226,8 @@ function drawPaperDesign(context: CanvasRenderingContext2D, frame: FrameId, acce
       context.restore();
     });
     context.restore();
+    drawBalloon(context, 570, 3290, 42, accent);
+    drawBalloon(context, 650, 3310, 36, ink);
   }
 }
 
@@ -182,13 +261,39 @@ export async function renderStripCanvas(
       const pixels = photoContext.getImageData(0, 0, PHOTO_WIDTH, PHOTO_HEIGHT);
       photoContext.putImageData(applyFilterToImageData(pixels, options.filter), 0, 0);
     }
-    context.drawImage(photoCanvas, PHOTO_X, y);
+    if (options.frame === "couple") {
+      const heartX = 150;
+      const heartY = y + 18;
+      const heartWidth = 900;
+      const heartHeight = 660;
+      context.save();
+      traceHeart(context, heartX, heartY, heartWidth, heartHeight);
+      context.clip();
+      context.drawImage(photoCanvas, heartX, heartY, heartWidth, heartHeight);
+      context.restore();
+
+      if (options.border !== "none") {
+        context.save();
+        context.strokeStyle = options.border === "soft" ? `${palette.ink}88` : palette.ink;
+        context.lineWidth = options.border === "soft" ? 7 : 12;
+        context.lineJoin = "round";
+        traceHeart(context, heartX, heartY, heartWidth, heartHeight);
+        context.stroke();
+        context.strokeStyle = palette.accent;
+        context.lineWidth = 5;
+        traceHeart(context, heartX + 10, heartY + 9, heartWidth - 20, heartHeight - 18);
+        context.stroke();
+        context.restore();
+      }
+    } else {
+      context.drawImage(photoCanvas, PHOTO_X, y);
+    }
 
     context.save();
     context.strokeStyle = options.border === "soft" ? `${palette.ink}66` : palette.ink;
     context.lineWidth = options.border === "soft" || options.frame === "white" ? 5 : 10;
     context.lineJoin = "round";
-    if (options.border !== "none") {
+    if (options.border !== "none" && options.frame !== "couple") {
       roughLine(context, PHOTO_X - 5, y - 5, PHOTO_X + PHOTO_WIDTH + 4, y - 2, 4);
       roughLine(context, PHOTO_X + PHOTO_WIDTH + 4, y - 2, PHOTO_X + PHOTO_WIDTH + 6, y + PHOTO_HEIGHT + 5, 4);
       roughLine(context, PHOTO_X + PHOTO_WIDTH + 6, y + PHOTO_HEIGHT + 5, PHOTO_X - 5, y + PHOTO_HEIGHT + 3, 4);

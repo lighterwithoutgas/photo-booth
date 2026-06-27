@@ -84,6 +84,8 @@ test("camera preview keeps its stream alive in development Strict Mode", async (
     const stream = (video as HTMLVideoElement).srcObject as MediaStream | null;
     return Boolean(stream?.getVideoTracks().some((track) => track.readyState === "live") && (video as HTMLVideoElement).videoWidth > 0);
   })).toBe(true);
+  await page.getByRole("button", { name: "Take four photos" }).click();
+  await expect(page.getByText("One second to switch your pose")).toBeVisible({ timeout: 6_000 });
 });
 
 test("generates and downloads a finished strip", async ({ page }, testInfo) => {

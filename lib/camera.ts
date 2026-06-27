@@ -1,5 +1,7 @@
 export type CameraErrorCode = "unsupported" | "insecure" | "denied" | "unavailable" | "busy" | "unknown";
 
+export const NEXT_POSE_DELAY_MS = 1_000;
+
 export function cameraReadiness(): CameraErrorCode | null {
   if (typeof window === "undefined" || !navigator.mediaDevices?.getUserMedia) return "unsupported";
   if (!window.isSecureContext && location.hostname !== "localhost") return "insecure";

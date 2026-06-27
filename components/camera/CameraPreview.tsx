@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import { Camera, RefreshCcw, SwitchCamera, X } from "lucide-react";
 import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
-import { requestCamera, stopStream } from "@/lib/camera";
+import { NEXT_POSE_DELAY_MS, requestCamera, stopStream } from "@/lib/camera";
 import type { PhotoItem } from "@/types/photo";
 import { SketchButton } from "@/components/ui/SketchButton";
 import { ProgressDots } from "@/components/ui/ProgressDots";
@@ -24,6 +24,7 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
   const [captured, setCaptured] = useState<PhotoItem[]>([]);
   const [running, setRunning] = useState(false);
   const [flash, setFlash] = useState(false);
+  const [betweenShots, setBetweenShots] = useState(false);
   const [devices, setDevices] = useState<MediaDeviceInfo[]>([]);
   const [deviceIndex, setDeviceIndex] = useState(0);
   const reduceMotion = useReducedMotion();
@@ -72,8 +73,13 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
         nextPhotos.push(photo);
         setCaptured([...nextPhotos]);
         setCountdown(null);
-        await wait(reduceMotion ? 100 : 420);
+        await wait(reduceMotion ? 100 : 260);
         setFlash(false);
+        if (index < 3) {
+          setBetweenShots(true);
+          await wait(NEXT_POSE_DELAY_MS);
+          setBetweenShots(false);
+        }
       }
       stopStream(streamRef.current);
       onComplete(nextPhotos);
@@ -81,6 +87,7 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
       stopStream(streamRef.current);
       setRunning(false);
       setCountdown(null);
+      setBetweenShots(false);
       onError();
     }
   };
@@ -129,10 +136,20 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
               aria-live="assertive"
             >{countdown}</motion.div>
           )}
+          {betweenShots && (
+            <motion.div
+              initial={{ opacity: 0, transform: reduceMotion ? "none" : "translateY(8px)" }}
+              animate={{ opacity: 1, transform: "translateY(0)" }}
+              exit={{ opacity: 0, transform: reduceMotion ? "none" : "translateY(-5px)" }}
+              transition={{ duration: 0.18, ease: [0.23, 1, 0.32, 1] }}
+              className="pose-cue"
+              role="status"
+            ><span>Next pose!</span></motion.div>
+          )}
         </AnimatePresence>
         <div className={`camera-flash ${flash ? "camera-flash--on" : ""}`} aria-hidden="true" />
         <div className="absolute bottom-4 left-1/2 -translate-x-1/2 rounded-full bg-ink/75 px-4 py-2 text-sm text-white backdrop-blur-sm">
-          {running ? "Hold that pose…" : "The saved photo will not be mirrored"}
+          {betweenShots ? "One second to switch your pose" : running ? "Hold that pose…" : "The saved photo will not be mirrored"}
         </div>
       </div>
 
