@@ -16,7 +16,7 @@ describe("strip dimensions", () => {
   it("can report scaled display dimensions", () => expect(stripDimensions(0.5)).toEqual({ width: 600, height: 1950 }));
   it("preserves the artist paper's original aspect ratio", () => {
     expect(coupleStripDimensions()).toEqual({ width: 1200, height: 4386 });
-    expect(paperStripDimensions("moonlit")).toEqual({ width: 1200, height: 2132 });
+    expect(paperStripDimensions("moonlit")).toEqual({ width: 1200, height: 3600 });
     expect(paperStripDimensions("botanical", 0.5)).toEqual({ width: 600, height: 1800 });
     expect(paperStripDimensions("birthdaycheers")).toEqual({ width: 1200, height: 3600 });
     expect(paperStripDimensions("weddingforest")).toEqual({ width: 1200, height: 3946 });

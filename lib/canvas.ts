@@ -39,14 +39,14 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
   },
   moonlit: {
     image: "/papers/moonlit-dreams.png",
-    source: { x: 0, y: 0, width: 941, height: 1672 },
+    source: { x: 0, y: 0, width: 724, height: 2172 },
     slots: [
-      { left: 225, top: 191, right: 709, bottom: 518 },
-      { left: 225, top: 554, right: 709, bottom: 886 },
-      { left: 225, top: 922, right: 709, bottom: 1249 },
-      { left: 225, top: 1284, right: 708, bottom: 1586 },
+      { left: 139, top: 267, right: 583, bottom: 648 },
+      { left: 139, top: 697, right: 583, bottom: 1080 },
+      { left: 139, top: 1126, right: 583, bottom: 1509 },
+      { left: 139, top: 1557, right: 583, bottom: 1937 },
     ],
-    radius: 38,
+    radius: 34,
   },
   botanical: {
     image: "/papers/botanical-garden.png",
