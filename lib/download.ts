@@ -7,6 +7,10 @@ export function individualPhotosFilename(date = new Date()): string {
   return `sketchsnap-4-photos-${date.toISOString().slice(0, 10)}.zip`;
 }
 
+export function storyFilename(date = new Date()): string {
+  return `sketchsnap-instagram-story-${date.toISOString().slice(0, 10)}.png`;
+}
+
 export function downloadBlob(blob: Blob, filename: string): void {
   const url = URL.createObjectURL(blob);
   const anchor = document.createElement("a");

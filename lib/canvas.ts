@@ -4,6 +4,8 @@ import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
 
 export const STRIP_WIDTH = 1200;
 export const STRIP_HEIGHT = 3900;
+export const STORY_WIDTH = 1080;
+export const STORY_HEIGHT = 1920;
 const PHOTO_X = 105;
 const PHOTO_WIDTH = 990;
 const PHOTO_HEIGHT = 720;
@@ -155,6 +157,10 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
   return { width: STRIP_WIDTH * scale, height: STRIP_HEIGHT * scale };
+}
+
+export function storyDimensions(): { width: number; height: number } {
+  return { width: STORY_WIDTH, height: STORY_HEIGHT };
 }
 
 export function coupleStripDimensions(scale = 1): { width: number; height: number } {
@@ -584,6 +590,61 @@ export async function renderStripCanvas(
     roughLine(context, 390, footerY + 115, 810, footerY + 115, 5);
   }
   context.restore();
+
+  return canvas;
+}
+
+export async function renderStoryCanvas(
+  photos: PhotoItem[],
+  options: StripOptions,
+): Promise<HTMLCanvasElement> {
+  const strip = await renderStripCanvas(photos, options);
+  const canvas = document.createElement("canvas");
+  canvas.width = STORY_WIDTH;
+  canvas.height = STORY_HEIGHT;
+  const context = canvas.getContext("2d");
+  if (!context) throw new Error("Canvas is not supported by this browser.");
+
+  const palette = framePalette[options.frame];
+  context.fillStyle = palette.background;
+  context.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
+
+  context.save();
+  context.globalAlpha = 0.18;
+  context.fillStyle = palette.accent;
+  context.beginPath();
+  context.ellipse(155, 215, 330, 420, -0.35, 0, Math.PI * 2);
+  context.ellipse(940, 1570, 410, 520, 0.22, 0, Math.PI * 2);
+  context.fill();
+  context.globalAlpha = 0.08;
+  context.fillStyle = palette.ink;
+  for (let index = 0; index < 90; index += 1) {
+    const x = seededUnit(index + 8101) * STORY_WIDTH;
+    const y = seededUnit(index + 9101) * STORY_HEIGHT;
+    const radius = 1 + seededUnit(index + 10101) * 2.4;
+    context.beginPath();
+    context.arc(x, y, radius, 0, Math.PI * 2);
+    context.fill();
+  }
+  context.restore();
+
+  const maxStripWidth = 640;
+  const maxStripHeight = 1740;
+  const scale = Math.min(maxStripWidth / strip.width, maxStripHeight / strip.height);
+  const width = Math.round(strip.width * scale);
+  const height = Math.round(strip.height * scale);
+  const x = Math.round((STORY_WIDTH - width) / 2);
+  const y = Math.round((STORY_HEIGHT - height) / 2);
+  const border = 14;
+
+  context.save();
+  context.shadowColor = "rgba(18, 20, 21, .3)";
+  context.shadowBlur = 34;
+  context.shadowOffsetY = 18;
+  context.fillStyle = "#fffdf7";
+  context.fillRect(x - border, y - border, width + border * 2, height + border * 2);
+  context.restore();
+  context.drawImage(strip, x, y, width, height);
 
   return canvas;
 }

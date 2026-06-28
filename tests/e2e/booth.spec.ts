@@ -119,6 +119,11 @@ test("generates and downloads a finished strip", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: "Download PNG" }).click();
   const download = await downloadPromise;
   expect(download.suggestedFilename()).toMatch(/^sketchsnap-photo-strip-\d{4}-\d{2}-\d{2}\.png$/);
+  const storyDownloadPromise = page.waitForEvent("download");
+  await page.getByRole("button", { name: "Download Instagram Story" }).click();
+  const storyDownload = await storyDownloadPromise;
+  expect(storyDownload.suggestedFilename()).toMatch(/^sketchsnap-instagram-story-\d{4}-\d{2}-\d{2}\.png$/);
+  await expect(page.getByText("Instagram Story saved at 1080 × 1920.")).toBeVisible();
   await expect(page.getByRole("button", { name: "Save 4 photos" })).toBeEnabled();
   const photosDownloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Save 4 photos" }).click();

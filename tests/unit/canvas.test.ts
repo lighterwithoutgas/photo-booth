@@ -6,6 +6,7 @@ import {
   STRIP_WIDTH,
   stripCutPositions,
   stripDimensions,
+  storyDimensions,
 } from "@/lib/canvas";
 
 describe("strip dimensions", () => {
@@ -14,6 +15,7 @@ describe("strip dimensions", () => {
     expect(STRIP_HEIGHT / STRIP_WIDTH).toBeGreaterThan(3);
   });
   it("can report scaled display dimensions", () => expect(stripDimensions(0.5)).toEqual({ width: 600, height: 1950 }));
+  it("exports Instagram Stories at 9:16", () => expect(storyDimensions()).toEqual({ width: 1080, height: 1920 }));
   it("preserves the artist paper's original aspect ratio", () => {
     expect(coupleStripDimensions()).toEqual({ width: 1200, height: 4386 });
     expect(paperStripDimensions("moonlit")).toEqual({ width: 1200, height: 3600 });

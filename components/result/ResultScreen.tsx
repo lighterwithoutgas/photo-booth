@@ -1,10 +1,10 @@
 "use client";
 
 import { useEffect, useMemo, useState } from "react";
-import { Download, Images, Palette, RefreshCcw, Scissors, Share2 } from "lucide-react";
+import { Download, Images, Instagram, Palette, RefreshCcw, Scissors, Share2 } from "lucide-react";
 import { motion, useReducedMotion } from "framer-motion";
-import { canvasToBlob, renderIndividualPhoto, renderStripCanvas, stripCutPositions } from "@/lib/canvas";
-import { downloadBlob, individualPhotosFilename, stripFilename } from "@/lib/download";
+import { canvasToBlob, renderIndividualPhoto, renderStoryCanvas, renderStripCanvas, stripCutPositions } from "@/lib/canvas";
+import { downloadBlob, individualPhotosFilename, storyFilename, stripFilename } from "@/lib/download";
 import { shareStrip } from "@/lib/share";
 import { createZip } from "@/lib/zip";
 import type { PhotoItem, StripOptions } from "@/types/photo";
@@ -24,6 +24,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   const [cuts, setCuts] = useState<number[]>([]);
   const [message, setMessage] = useState("");
   const [individualFiles, setIndividualFiles] = useState<File[]>([]);
+  const [storyBusy, setStoryBusy] = useState(false);
   const reduceMotion = useReducedMotion();
   const cutPositions = stripCutPositions(options.frame);
 
@@ -66,6 +67,19 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
     }
   };
 
+  const downloadStory = async () => {
+    setStoryBusy(true);
+    try {
+      const canvas = await renderStoryCanvas(photos, options);
+      downloadBlob(await canvasToBlob(canvas), storyFilename());
+      setMessage("Instagram Story saved at 1080 × 1920.");
+    } catch {
+      setMessage("The Instagram Story could not be created. Please try again.");
+    } finally {
+      setStoryBusy(false);
+    }
+  };
+
   const share = async () => {
     try {
       const result = await shareStrip(blob);
@@ -94,6 +108,9 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
           <SketchButton tone="paper" onClick={downloadJpeg}><Download size={19} /> Download JPEG</SketchButton>
           <SketchButton tone="paper" onClick={share}><Share2 size={19} /> Share strip</SketchButton>
           <SketchButton tone="paper" onClick={downloadIndividuals} disabled={individualFiles.length !== 4}><Images size={19} /> {individualFiles.length === 4 ? "Save 4 photos" : "Preparing photos…"}</SketchButton>
+          <SketchButton className="sm:col-span-2" tone="ink" onClick={downloadStory} disabled={storyBusy}>
+            <Instagram size={19} /> {storyBusy ? "Preparing Story…" : "Download Instagram Story"}
+          </SketchButton>
         </div>
 
         <div className="mt-6 flex flex-wrap gap-x-6 gap-y-3">
