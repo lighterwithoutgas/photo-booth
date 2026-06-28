@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
-import { Check, ChevronLeft, ChevronRight, Move, RotateCcw, X } from "lucide-react";
+import { Camera, Check, ChevronLeft, ChevronRight, Move, RotateCcw, X } from "lucide-react";
 import { FILTERS } from "@/lib/filters";
 import { canvasToBlob, photoSlotAspect, renderStripCanvas } from "@/lib/canvas";
 import type { FrameId, PhotoItem, PhotoPosition, StripOptions } from "@/types/photo";
@@ -55,9 +55,10 @@ interface StripEditorProps {
   onOptionsChange: (options: StripOptions) => void;
   onConfirm: (blob: Blob) => void;
   onBack: () => void;
+  onRetakePhoto?: (index: number) => void;
 }
 
-export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBack }: StripEditorProps) {
+export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBack, onRetakePhoto }: StripEditorProps) {
   const [previewUrl, setPreviewUrl] = useState("");
   const [rendering, setRendering] = useState(true);
   const [error, setError] = useState("");
@@ -291,17 +292,28 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
                 );
               })}
             </div>
-            <button
-              type="button"
-              className="text-link text-sm"
-              onClick={() => {
-                const centered = { x: 0, y: 0 };
-                setDraftPosition(centered);
-                commitPosition(centered);
-              }}
-            >
-              Center photo {selectedPhoto + 1}
-            </button>
+            <div className="flex flex-wrap items-center gap-4">
+              <button
+                type="button"
+                className="text-link text-sm"
+                onClick={() => {
+                  const centered = { x: 0, y: 0 };
+                  setDraftPosition(centered);
+                  commitPosition(centered);
+                }}
+              >
+                Center photo {selectedPhoto + 1}
+              </button>
+              {onRetakePhoto && (
+                <button
+                  type="button"
+                  className="text-link inline-flex items-center gap-2 text-sm"
+                  onClick={() => onRetakePhoto(selectedPhoto)}
+                >
+                  <Camera size={16} /> Retake photo {selectedPhoto + 1}
+                </button>
+              )}
+            </div>
           </div>
         </fieldset>
 

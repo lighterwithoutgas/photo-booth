@@ -14,11 +14,14 @@ export function useBoothWorkflow() {
   const [stripOptions, setStripOptions] = useState<StripOptions>(DEFAULT_STRIP_OPTIONS);
   const [stripBlob, setStripBlob] = useState<Blob | null>(null);
   const [errorCode, setErrorCode] = useState<BoothErrorCode>("unknown");
+  const [retakeIndex, setRetakeIndex] = useState<number | null>(null);
   const photosRef = useRef(photos);
   const streamRef = useRef(stream);
+  const retakeIndexRef = useRef(retakeIndex);
 
   photosRef.current = photos;
   streamRef.current = stream;
+  retakeIndexRef.current = retakeIndex;
 
   useEffect(() => () => {
     photosRef.current.forEach((photo) => URL.revokeObjectURL(photo.url));
@@ -36,7 +39,41 @@ export function useBoothWorkflow() {
   const leaveCamera = useCallback(() => {
     stopStream(streamRef.current);
     setStream(null);
-    setScreen("method");
+    if (retakeIndexRef.current !== null) {
+      setRetakeIndex(null);
+      setScreen("customize");
+    } else {
+      setScreen("method");
+    }
+  }, []);
+
+  const startRetake = useCallback((index: number) => {
+    setRetakeIndex(index);
+    setScreen("camera-permission");
+  }, []);
+
+  const replacePhoto = useCallback((photo: PhotoItem) => {
+    const index = retakeIndexRef.current;
+    if (index === null) {
+      URL.revokeObjectURL(photo.url);
+      return;
+    }
+    setPhotos((prev) => {
+      const next = [...prev];
+      const old = next[index];
+      if (old) URL.revokeObjectURL(old.url);
+      next[index] = photo;
+      return next;
+    });
+    setStripOptions((prev) => {
+      const positions = Array.from({ length: 4 }, (_, slot) => prev.photoPositions[slot] ?? { x: 0, y: 0 });
+      positions[index] = { x: 0, y: 0 };
+      return { ...prev, photoPositions: positions };
+    });
+    stopStream(streamRef.current);
+    setStream(null);
+    setRetakeIndex(null);
+    setScreen("customize");
   }, []);
 
   const choosePhotos = useCallback((nextPhotos: PhotoItem[]) => {
@@ -69,6 +106,7 @@ export function useBoothWorkflow() {
     setStripBlob(null);
     setStripOptions(DEFAULT_STRIP_OPTIONS);
     setErrorCode("unknown");
+    setRetakeIndex(null);
     setScreen("landing");
   }, []);
 
@@ -79,10 +117,13 @@ export function useBoothWorkflow() {
     stripOptions,
     stripBlob,
     errorCode,
+    retakeIndex,
     navigate,
     grantCamera,
     leaveCamera,
     choosePhotos,
+    startRetake,
+    replacePhoto,
     showError,
     confirmStrip,
     setStripOptions,

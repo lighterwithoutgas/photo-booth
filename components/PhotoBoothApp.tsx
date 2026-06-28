@@ -43,10 +43,10 @@ export function PhotoBoothApp() {
         >
           {booth.screen === "landing" && <LandingScreen onEnter={() => booth.navigate("method")} />}
           {booth.screen === "method" && <MethodScreen onCamera={() => booth.navigate("camera-permission")} onUpload={() => booth.navigate("upload")} onBack={() => booth.navigate("landing")} />}
-          {booth.screen === "camera-permission" && <CameraPermission onGranted={booth.grantCamera} onUpload={() => booth.navigate("upload")} onBack={() => booth.navigate("method")} onError={booth.showError} />}
-          {booth.screen === "camera" && booth.stream && <CameraPreview initialStream={booth.stream} onComplete={booth.choosePhotos} onExit={booth.leaveCamera} onError={() => booth.showError("capture")} />}
+          {booth.screen === "camera-permission" && <CameraPermission onGranted={booth.grantCamera} onUpload={() => booth.navigate("upload")} onBack={() => booth.retakeIndex !== null ? booth.leaveCamera() : booth.navigate("method")} onError={booth.showError} />}
+          {booth.screen === "camera" && booth.stream && <CameraPreview initialStream={booth.stream} shotCount={booth.retakeIndex !== null ? 1 : 4} onComplete={(captured) => booth.retakeIndex !== null ? booth.replacePhoto(captured[0]) : booth.choosePhotos(captured)} onExit={booth.leaveCamera} onError={() => booth.showError("capture")} />}
           {booth.screen === "upload" && <PhotoUploader initialPhotos={booth.photos} onContinue={booth.choosePhotos} onBack={() => booth.navigate("method")} />}
-          {booth.screen === "customize" && <StripEditor photos={booth.photos} options={booth.stripOptions} onOptionsChange={booth.setStripOptions} onBack={() => booth.navigate("method")} onConfirm={booth.confirmStrip} />}
+          {booth.screen === "customize" && <StripEditor photos={booth.photos} options={booth.stripOptions} onOptionsChange={booth.setStripOptions} onBack={() => booth.navigate("method")} onConfirm={booth.confirmStrip} onRetakePhoto={booth.startRetake} />}
           {booth.screen === "printing" && booth.stripBlob && <PrintingAnimation blob={booth.stripBlob} onComplete={() => booth.navigate("result")} />}
           {booth.screen === "result" && booth.stripBlob && <ResultScreen blob={booth.stripBlob} photos={booth.photos} options={booth.stripOptions} onCustomize={() => booth.navigate("customize")} onStartOver={booth.startOver} />}
           {booth.screen === "error" && <ErrorScreen code={booth.errorCode} onRetry={() => booth.navigate("camera-permission")} onUpload={() => booth.navigate("upload")} onBack={() => booth.navigate("method")} />}

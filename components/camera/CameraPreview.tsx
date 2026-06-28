@@ -13,11 +13,12 @@ interface CameraPreviewProps {
   onComplete: (photos: PhotoItem[]) => void;
   onExit: () => void;
   onError: () => void;
+  shotCount?: number;
 }
 
 const wait = (duration: number) => new Promise((resolve) => window.setTimeout(resolve, duration));
 
-export function CameraPreview({ initialStream, onComplete, onExit, onError }: CameraPreviewProps) {
+export function CameraPreview({ initialStream, onComplete, onExit, onError, shotCount = 4 }: CameraPreviewProps) {
   const videoRef = useRef<HTMLVideoElement>(null);
   const streamRef = useRef<MediaStream>(initialStream);
   const [countdown, setCountdown] = useState<number | null>(null);
@@ -63,7 +64,7 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
     setRunning(true);
     const nextPhotos: PhotoItem[] = [];
     try {
-      for (let index = 0; index < 4; index += 1) {
+      for (let index = 0; index < shotCount; index += 1) {
         for (const number of [3, 2, 1]) {
           setCountdown(number);
           await wait(reduceMotion ? 250 : 780);
@@ -75,7 +76,7 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
         setCountdown(null);
         await wait(reduceMotion ? 100 : 260);
         setFlash(false);
-        if (index < 3) {
+        if (index < shotCount - 1) {
           setBetweenShots(true);
           await wait(NEXT_POSE_DELAY_MS);
           setBetweenShots(false);
@@ -118,7 +119,7 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
         <button className="icon-button" onClick={exit} aria-label="Exit camera"><X /></button>
         <div className="text-center">
           <p className="eyebrow">Look toward the little light</p>
-          <h1 id="camera-title" className="font-hand text-2xl font-bold">Photo {Math.min(captured.length + 1, 4)} of 4</h1>
+          <h1 id="camera-title" className="font-hand text-2xl font-bold">{shotCount === 1 ? "Retake this photo" : `Photo ${Math.min(captured.length + 1, shotCount)} of ${shotCount}`}</h1>
         </div>
         <button className="icon-button" onClick={switchCamera} disabled={devices.length < 2 || running} aria-label="Switch camera"><SwitchCamera /></button>
       </div>
@@ -153,15 +154,15 @@ export function CameraPreview({ initialStream, onComplete, onExit, onError }: Ca
         </div>
       </div>
 
-      <ProgressDots current={captured.length} />
+      {shotCount > 1 && <ProgressDots current={captured.length} total={shotCount} />}
       <div className="flex flex-wrap items-center justify-center gap-3">
         <SketchButton onClick={beginSequence} disabled={running} tone="rust">
-          <Camera size={21} /> {running ? "Sequence in progress" : "Take four photos"}
+          <Camera size={21} /> {running ? "Sequence in progress" : shotCount === 1 ? "Retake photo" : "Take four photos"}
         </SketchButton>
         {!running && <button className="text-link inline-flex items-center gap-2" onClick={exit}><RefreshCcw size={16} /> Restart</button>}
       </div>
-      <div className="grid grid-cols-4 gap-2" aria-label="Captured photo previews">
-        {Array.from({ length: 4 }, (_, index) => captured[index] ? (
+      <div className="grid grid-cols-4 gap-2" aria-label="Captured photo previews" hidden={shotCount === 1}>
+        {Array.from({ length: shotCount === 1 ? 0 : 4 }, (_, index) => captured[index] ? (
           // eslint-disable-next-line @next/next/no-img-element
           <motion.img key={captured[index].id} initial={{ opacity: 0, scale: 0.94 }} animate={{ opacity: 1, scale: 1 }} src={captured[index].url} alt={`Captured photo ${index + 1}`} className="aspect-[4/3] w-full border-2 border-ink object-cover scale-x-[-1]" />
         ) : <div key={index} className="aspect-[4/3] border-2 border-dashed border-ink/30 bg-white/30" />)}
