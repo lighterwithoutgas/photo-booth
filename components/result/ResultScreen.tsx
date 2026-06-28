@@ -33,7 +33,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   useEffect(() => {
     let active = true;
     Promise.all(photos.map(async (photo, index) => {
-      const image = await renderIndividualPhoto(photo, options.filter);
+      const image = await renderIndividualPhoto(photo, options.filter, options.photoPositions[index]);
       return new File([image], `sketchsnap-photo-${index + 1}.png`, { type: "image/png" });
     })).then((files) => {
       if (active) setIndividualFiles(files);
@@ -41,7 +41,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
       if (active) setMessage("The individual photos could not be prepared.");
     });
     return () => { active = false; };
-  }, [photos, options.filter]);
+  }, [photos, options.filter, options.photoPositions]);
 
   const downloadJpeg = async () => {
     try {

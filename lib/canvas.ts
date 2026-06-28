@@ -322,6 +322,13 @@ function traceTemplateSlot(context: CanvasRenderingContext2D, template: PaperTem
   context.closePath();
 }
 
+export function photoSlotAspect(frame: FrameId, index: number): number {
+  const template = PAPER_TEMPLATES[frame];
+  if (!template) return PHOTO_WIDTH / PHOTO_HEIGHT;
+  const slot = template.slots[index] ?? template.slots[0];
+  return (slot.right - slot.left) / (slot.bottom - slot.top);
+}
+
 async function drawTemplateNames(
   context: CanvasRenderingContext2D,
   template: PaperTemplate,
@@ -524,7 +531,13 @@ export async function renderStripCanvas(
     const targetWidth = slot ? Math.round(slot.width) : PHOTO_WIDTH;
     const targetHeight = slot ? Math.round(slot.height) : PHOTO_HEIGHT;
     const y = slot ? slot.y : PHOTO_TOP + index * (PHOTO_HEIGHT + PHOTO_GAP);
-    const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, targetWidth, targetHeight);
+    const crop = calculateCoverCrop(
+      image.naturalWidth,
+      image.naturalHeight,
+      targetWidth,
+      targetHeight,
+      options.photoPositions[index],
+    );
     const photoCanvas = document.createElement("canvas");
     photoCanvas.width = targetWidth;
     photoCanvas.height = targetHeight;
@@ -659,14 +672,18 @@ export async function canvasToBlob(
   });
 }
 
-export async function renderIndividualPhoto(photo: PhotoItem, filterId: StripOptions["filter"]): Promise<Blob> {
+export async function renderIndividualPhoto(
+  photo: PhotoItem,
+  filterId: StripOptions["filter"],
+  position: StripOptions["photoPositions"][number] = { x: 0, y: 0 },
+): Promise<Blob> {
   const canvas = document.createElement("canvas");
   canvas.width = 1600;
   canvas.height = 1200;
   const context = canvas.getContext("2d");
   if (!context) throw new Error("Canvas is not supported by this browser.");
   const image = await loadImage(photo.url);
-  const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, canvas.width, canvas.height);
+  const crop = calculateCoverCrop(image.naturalWidth, image.naturalHeight, canvas.width, canvas.height, position);
   context.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, canvas.width, canvas.height);
   if (filterId !== "original") {
     const pixels = context.getImageData(0, 0, canvas.width, canvas.height);

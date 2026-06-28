@@ -1,10 +1,10 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { Check, ChevronLeft, ChevronRight, RotateCcw, X } from "lucide-react";
+import { useEffect, useRef, useState, type KeyboardEvent, type PointerEvent } from "react";
+import { Check, ChevronLeft, ChevronRight, Move, RotateCcw, X } from "lucide-react";
 import { FILTERS } from "@/lib/filters";
-import { canvasToBlob, renderStripCanvas } from "@/lib/canvas";
-import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
+import { canvasToBlob, photoSlotAspect, renderStripCanvas } from "@/lib/canvas";
+import type { FrameId, PhotoItem, PhotoPosition, StripOptions } from "@/types/photo";
 import { SketchButton } from "@/components/ui/SketchButton";
 
 const frames: { id: FrameId; name: string; color: string; ink: string; previewImage?: string }[] = [
@@ -46,6 +46,7 @@ export const DEFAULT_STRIP_OPTIONS: StripOptions = {
   showDate: true,
   weddingNameOne: "Sarah",
   weddingNameTwo: "Omar",
+  photoPositions: Array.from({ length: 4 }, () => ({ x: 0, y: 0 })),
 };
 
 interface StripEditorProps {
@@ -60,6 +61,18 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
   const [previewUrl, setPreviewUrl] = useState("");
   const [rendering, setRendering] = useState(true);
   const [error, setError] = useState("");
+  const [selectedPhoto, setSelectedPhoto] = useState(0);
+  const [draftPosition, setDraftPosition] = useState<PhotoPosition>(options.photoPositions[0] ?? { x: 0, y: 0 });
+  const [dragging, setDragging] = useState(false);
+  const dragRef = useRef<{
+    pointerId: number;
+    startX: number;
+    startY: number;
+    width: number;
+    height: number;
+    position: PhotoPosition;
+    latest: PhotoPosition;
+  } | null>(null);
 
   useEffect(() => {
     let active = true;
@@ -85,8 +98,78 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
 
   useEffect(() => () => { if (previewUrl) URL.revokeObjectURL(previewUrl); }, [previewUrl]);
 
+  useEffect(() => {
+    if (!dragRef.current) setDraftPosition(options.photoPositions[selectedPhoto] ?? { x: 0, y: 0 });
+  }, [options.photoPositions, selectedPhoto]);
+
   const setOption = <Key extends keyof StripOptions>(key: Key, value: StripOptions[Key]) => {
     onOptionsChange({ ...options, [key]: value });
+  };
+
+  const clampPosition = (value: number) => Math.max(-1, Math.min(1, value));
+
+  const commitPosition = (position: PhotoPosition) => {
+    const next = Array.from({ length: 4 }, (_, index) => options.photoPositions[index] ?? { x: 0, y: 0 });
+    next[selectedPhoto] = position;
+    setOption("photoPositions", next);
+  };
+
+  const selectPhoto = (index: number) => {
+    setSelectedPhoto(index);
+    setDraftPosition(options.photoPositions[index] ?? { x: 0, y: 0 });
+  };
+
+  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const bounds = event.currentTarget.getBoundingClientRect();
+    event.currentTarget.setPointerCapture(event.pointerId);
+    dragRef.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      startY: event.clientY,
+      width: bounds.width,
+      height: bounds.height,
+      position: draftPosition,
+      latest: draftPosition,
+    };
+    setDragging(true);
+  };
+
+  const moveDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    const next = {
+      x: clampPosition(drag.position.x - ((event.clientX - drag.startX) / drag.width) * 2),
+      y: clampPosition(drag.position.y - ((event.clientY - drag.startY) / drag.height) * 2),
+    };
+    drag.latest = next;
+    setDraftPosition(next);
+  };
+
+  const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
+    const drag = dragRef.current;
+    if (!drag || drag.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) event.currentTarget.releasePointerCapture(event.pointerId);
+    dragRef.current = null;
+    setDragging(false);
+    commitPosition(drag.latest);
+  };
+
+  const adjustWithKeyboard = (event: KeyboardEvent<HTMLDivElement>) => {
+    const deltas: Record<string, PhotoPosition> = {
+      ArrowLeft: { x: -0.06, y: 0 },
+      ArrowRight: { x: 0.06, y: 0 },
+      ArrowUp: { x: 0, y: -0.06 },
+      ArrowDown: { x: 0, y: 0.06 },
+    };
+    const delta = deltas[event.key];
+    if (!delta) return;
+    event.preventDefault();
+    const next = {
+      x: clampPosition(draftPosition.x + delta.x),
+      y: clampPosition(draftPosition.y + delta.y),
+    };
+    setDraftPosition(next);
+    commitPosition(next);
   };
 
   const cycleFrame = (direction: -1 | 1) => {
@@ -162,7 +245,68 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
         </fieldset>
 
         <fieldset>
-          <legend className="control-label">3. Add the finishing notes</legend>
+          <legend className="control-label">3. Adjust your photos</legend>
+          <div className="photo-adjuster">
+            <div
+              className="photo-adjuster-canvas"
+              data-dragging={dragging}
+              style={{ aspectRatio: photoSlotAspect(options.frame, selectedPhoto) }}
+              onPointerDown={startDrag}
+              onPointerMove={moveDrag}
+              onPointerUp={finishDrag}
+              onPointerCancel={finishDrag}
+              onKeyDown={adjustWithKeyboard}
+              tabIndex={0}
+              aria-label={`Adjust photo ${selectedPhoto + 1}`}
+            >
+              {/* Object URLs stay local and need direct rendering for crop adjustment. */}
+              {/* eslint-disable-next-line @next/next/no-img-element */}
+              <img
+                src={photos[selectedPhoto].url}
+                alt=""
+                className="photo-adjuster-image"
+                style={{ objectPosition: `${50 + draftPosition.x * 50}% ${50 + draftPosition.y * 50}%` }}
+                draggable={false}
+              />
+              <span className="photo-adjuster-hint"><Move size={16} /> Drag to reposition</span>
+            </div>
+            <div className="photo-adjuster-thumbs" aria-label="Choose a photo to adjust">
+              {photos.map((photo, index) => {
+                const position = options.photoPositions[index] ?? { x: 0, y: 0 };
+                return (
+                  <button
+                    key={photo.id}
+                    type="button"
+                    className={`photo-adjust-thumb ${selectedPhoto === index ? "photo-adjust-thumb--selected" : ""}`}
+                    style={{
+                      backgroundImage: `url(${photo.url})`,
+                      backgroundPosition: `${50 + position.x * 50}% ${50 + position.y * 50}%`,
+                    }}
+                    onClick={() => selectPhoto(index)}
+                    aria-label={`Photo ${index + 1}`}
+                    aria-pressed={selectedPhoto === index}
+                  >
+                    <span>{index + 1}</span>
+                  </button>
+                );
+              })}
+            </div>
+            <button
+              type="button"
+              className="text-link text-sm"
+              onClick={() => {
+                const centered = { x: 0, y: 0 };
+                setDraftPosition(centered);
+                commitPosition(centered);
+              }}
+            >
+              Center photo {selectedPhoto + 1}
+            </button>
+          </div>
+        </fieldset>
+
+        <fieldset>
+          <legend className="control-label">4. Add the finishing notes</legend>
           {options.frame === "weddingforest" ? (
             <div className="rounded-xl border-2 border-dashed border-[#d9ad43]/60 bg-[#123d2e]/[.06] p-4">
               <p className="mb-3 text-sm font-semibold text-ink/70">Write the couple&apos;s names in the gold wedding script.</p>

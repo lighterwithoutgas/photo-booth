@@ -31,6 +31,11 @@ export type FrameId =
   | "weddingforest";
 export type BorderId = "ink" | "soft" | "none";
 
+export interface PhotoPosition {
+  x: number;
+  y: number;
+}
+
 export interface PhotoItem {
   id: string;
   blob: Blob;
@@ -46,4 +51,5 @@ export interface StripOptions {
   showDate: boolean;
   weddingNameOne: string;
   weddingNameTwo: string;
+  photoPositions: PhotoPosition[];
 }
