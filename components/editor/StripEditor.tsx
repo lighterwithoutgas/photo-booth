@@ -21,9 +21,22 @@ const frames: { id: FrameId; name: string; color: string; ink: string; previewIm
   { id: "botanical", name: "Botanical garden", color: "#e9e4bd", ink: "#5f6334", previewImage: "/papers/botanical-garden.png" },
   { id: "cherry", name: "Cherry doodles", color: "#fff1d7", ink: "#932a28", previewImage: "/papers/cherry-doodles.png" },
   { id: "loveletters", name: "Love letters", color: "#f9d7dc", ink: "#b83f59", previewImage: "/papers/love-letters.png" },
+  { id: "birthdaycheers", name: "Birthday cheers", color: "#f6ead7", ink: "#20201d", previewImage: "/papers/birthday-cheers.png" },
+  { id: "birthdaywish", name: "Birthday wish", color: "#d8c0eb", ink: "#9d4cad", previewImage: "/papers/birthday-wish.png" },
+  { id: "weddingivory", name: "Just married", color: "#f6efe2", ink: "#8d692a", previewImage: "/papers/wedding-ivory.png" },
+  { id: "weddingforest", name: "Forest wedding", color: "#123d2e", ink: "#d9ad43", previewImage: "/papers/wedding-forest-custom.png" },
 ];
 
-const artistPaperFrames = new Set<FrameId>(["couple", "moonlit", "botanical", "cherry", "loveletters"]);
+const artistPaperFrames = new Set<FrameId>([
+  "couple",
+  "moonlit",
+  "botanical",
+  "cherry",
+  "loveletters",
+  "birthdaycheers",
+  "birthdaywish",
+  "weddingivory",
+]);
 
 export const DEFAULT_STRIP_OPTIONS: StripOptions = {
   filter: "original",
@@ -31,6 +44,8 @@ export const DEFAULT_STRIP_OPTIONS: StripOptions = {
   border: "ink",
   footerText: "tiny moments, kept",
   showDate: true,
+  weddingNameOne: "Sarah",
+  weddingNameTwo: "Omar",
 };
 
 interface StripEditorProps {
@@ -148,7 +163,35 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
 
         <fieldset>
           <legend className="control-label">3. Add the finishing notes</legend>
-          {artistPaperFrames.has(options.frame) ? (
+          {options.frame === "weddingforest" ? (
+            <div className="rounded-xl border-2 border-dashed border-[#d9ad43]/60 bg-[#123d2e]/[.06] p-4">
+              <p className="mb-3 text-sm font-semibold text-ink/70">Write the couple&apos;s names in the gold wedding script.</p>
+              <div className="grid gap-3 sm:grid-cols-2">
+                <label className="text-sm font-semibold" htmlFor="weddingNameOne">
+                  First name
+                  <input
+                    id="weddingNameOne"
+                    className="sketch-input mt-2 wedding-name-input"
+                    maxLength={18}
+                    value={options.weddingNameOne}
+                    onChange={(event) => setOption("weddingNameOne", event.target.value)}
+                    autoComplete="off"
+                  />
+                </label>
+                <label className="text-sm font-semibold" htmlFor="weddingNameTwo">
+                  Second name
+                  <input
+                    id="weddingNameTwo"
+                    className="sketch-input mt-2 wedding-name-input"
+                    maxLength={18}
+                    value={options.weddingNameTwo}
+                    onChange={(event) => setOption("weddingNameTwo", event.target.value)}
+                    autoComplete="off"
+                  />
+                </label>
+              </div>
+            </div>
+          ) : artistPaperFrames.has(options.frame) ? (
             <p className="rounded-xl border-2 border-dashed border-rust/45 bg-[#f3cdd0]/55 p-4 text-sm font-semibold text-ink/75">
               This artist paper keeps its original hand-drawn borders and finish exactly as designed.
             </p>

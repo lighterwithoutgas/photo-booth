@@ -24,7 +24,11 @@ export type FrameId =
   | "moonlit"
   | "botanical"
   | "cherry"
-  | "loveletters";
+  | "loveletters"
+  | "birthdaycheers"
+  | "birthdaywish"
+  | "weddingivory"
+  | "weddingforest";
 export type BorderId = "ink" | "soft" | "none";
 
 export interface PhotoItem {
@@ -40,4 +44,6 @@ export interface StripOptions {
   border: BorderId;
   footerText: string;
   showDate: boolean;
+  weddingNameOne: string;
+  weddingNameTwo: string;
 }

@@ -18,6 +18,8 @@ describe("strip dimensions", () => {
     expect(coupleStripDimensions()).toEqual({ width: 1200, height: 4386 });
     expect(paperStripDimensions("moonlit")).toEqual({ width: 1200, height: 3600 });
     expect(paperStripDimensions("botanical", 0.5)).toEqual({ width: 600, height: 1800 });
+    expect(paperStripDimensions("birthdaycheers")).toEqual({ width: 1200, height: 3600 });
+    expect(paperStripDimensions("weddingforest")).toEqual({ width: 1200, height: 3946 });
   });
   it("places cut guides between artist paper photo slots", () => {
     expect(stripCutPositions("loveletters")).toEqual([

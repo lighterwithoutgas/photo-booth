@@ -46,6 +46,17 @@ test("upload flow validates four images and opens the editor", async ({ page }) 
   await page.getByRole("button", { name: "Moonlit dreams" }).click();
   await expect(page.getByRole("button", { name: "Moonlit dreams" })).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(handmadePreview);
+  let paperPreview = await stripPreview.getAttribute("src");
+  for (const paper of ["Birthday cheers", "Birthday wish", "Just married", "Forest wedding"]) {
+    await page.getByRole("button", { name: paper }).click();
+    await expect(page.getByRole("button", { name: paper })).toHaveAttribute("aria-pressed", "true");
+    await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(paperPreview);
+    paperPreview = await stripPreview.getAttribute("src");
+  }
+  const forestPreview = paperPreview;
+  await page.getByLabel("First name").fill("Layla");
+  await page.getByLabel("Second name").fill("Youssef");
+  await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(forestPreview);
 });
 
 test("camera denial offers the upload fallback", async ({ page }) => {

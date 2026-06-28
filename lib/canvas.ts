@@ -15,6 +15,15 @@ interface PaperTemplate {
   source: { x: number; y: number; width: number; height: number };
   slots: { left: number; top: number; right: number; bottom: number }[];
   radius?: number;
+  names?: {
+    centerX: number;
+    firstY: number;
+    ampersandY: number;
+    secondY: number;
+    maxWidth: number;
+    fontSize: number;
+    color: string;
+  };
 }
 
 const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
@@ -72,6 +81,56 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
     ],
     radius: 35,
   },
+  birthdaycheers: {
+    image: "/papers/birthday-cheers.png",
+    source: { x: 18, y: 5, width: 300, height: 900 },
+    slots: [
+      { left: 54, top: 147, right: 237, bottom: 265 },
+      { left: 54, top: 288, right: 236, bottom: 404 },
+      { left: 55, top: 426, right: 236, bottom: 542 },
+      { left: 55, top: 567, right: 237, bottom: 689 },
+    ],
+  },
+  birthdaywish: {
+    image: "/papers/birthday-wish.png",
+    source: { x: 45, y: 17, width: 305, height: 983 },
+    slots: [
+      { left: 59, top: 147, right: 237, bottom: 271 },
+      { left: 59, top: 294, right: 236, bottom: 419 },
+      { left: 59, top: 451, right: 236, bottom: 588 },
+      { left: 59, top: 621, right: 237, bottom: 765 },
+    ],
+  },
+  weddingivory: {
+    image: "/papers/wedding-ivory.png",
+    source: { x: 45, y: 5, width: 299, height: 900 },
+    slots: [
+      { left: 55, top: 147, right: 240, bottom: 266 },
+      { left: 56, top: 288, right: 239, bottom: 404 },
+      { left: 56, top: 424, right: 240, bottom: 542 },
+      { left: 55, top: 565, right: 240, bottom: 686 },
+    ],
+  },
+  weddingforest: {
+    image: "/papers/wedding-forest-custom.png",
+    source: { x: 60, y: 42, width: 624, height: 2052 },
+    slots: [
+      { left: 132, top: 326, right: 474, bottom: 589 },
+      { left: 132, top: 635, right: 474, bottom: 904 },
+      { left: 131, top: 956, right: 473, bottom: 1239 },
+      { left: 130, top: 1292, right: 473, bottom: 1592 },
+    ],
+    radius: 1,
+    names: {
+      centerX: 312,
+      firstY: 145,
+      ampersandY: 205,
+      secondY: 270,
+      maxWidth: 310,
+      fontSize: 74,
+      color: "#d9ad43",
+    },
+  },
 };
 
 const framePalette: Record<FrameId, { background: string; ink: string; accent: string }> = {
@@ -88,6 +147,10 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
   botanical: { background: "#e9e4bd", ink: "#5f6334", accent: "#c66f45" },
   cherry: { background: "#fff1d7", ink: "#932a28", accent: "#ca4943" },
   loveletters: { background: "#f9d7dc", ink: "#b83f59", accent: "#e58fa0" },
+  birthdaycheers: { background: "#f6ead7", ink: "#20201d", accent: "#ed719a" },
+  birthdaywish: { background: "#d8c0eb", ink: "#201c25", accent: "#ed6f9e" },
+  weddingivory: { background: "#f6efe2", ink: "#4d463d", accent: "#b58a39" },
+  weddingforest: { background: "#123d2e", ink: "#f5e5b7", accent: "#d9ad43" },
 };
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
@@ -251,6 +314,46 @@ function traceTemplateSlot(context: CanvasRenderingContext2D, template: PaperTem
   context.lineTo(slot.x, slot.y + radius);
   context.quadraticCurveTo(slot.x, slot.y, slot.x + radius, slot.y);
   context.closePath();
+}
+
+async function drawTemplateNames(
+  context: CanvasRenderingContext2D,
+  template: PaperTemplate,
+  options: StripOptions,
+): Promise<void> {
+  if (!template.names) return;
+  if (document.fonts) await document.fonts.load("100px 'Great Vibes'");
+
+  const scale = STRIP_WIDTH / template.source.width;
+  const names = template.names;
+  const firstName = options.weddingNameOne.trim();
+  const secondName = options.weddingNameTwo.trim();
+  const centerX = names.centerX * scale;
+  const maxWidth = names.maxWidth * scale;
+  const baseFontSize = names.fontSize * scale;
+
+  const drawFittedText = (text: string, y: number, size = baseFontSize) => {
+    if (!text) return;
+    let fontSize = size;
+    context.font = `${fontSize}px 'Great Vibes', 'Segoe Script', cursive`;
+    while (context.measureText(text).width > maxWidth && fontSize > 44) {
+      fontSize -= 4;
+      context.font = `${fontSize}px 'Great Vibes', 'Segoe Script', cursive`;
+    }
+    context.fillText(text, centerX, y * scale);
+  };
+
+  context.save();
+  context.fillStyle = names.color;
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.shadowColor = "rgba(53, 35, 8, .24)";
+  context.shadowBlur = 1.5 * scale;
+  context.shadowOffsetY = 0.8 * scale;
+  drawFittedText(firstName, names.firstY);
+  if (firstName && secondName) drawFittedText("&", names.ampersandY, baseFontSize * 0.58);
+  drawFittedText(secondName, names.secondY);
+  context.restore();
 }
 
 function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
@@ -449,7 +552,10 @@ export async function renderStripCanvas(
     context.restore();
   });
 
-  if (template) return canvas;
+  if (template) {
+    await drawTemplateNames(context, template, options);
+    return canvas;
+  }
 
   drawPaperDesign(context, options.frame, palette.accent, palette.ink);
 
