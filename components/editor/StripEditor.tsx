@@ -25,6 +25,9 @@ const frames: { id: FrameId; name: string; color: string; ink: string; previewIm
   { id: "birthdaywish", name: "Birthday wish", color: "#d8c0eb", ink: "#9d4cad", previewImage: "/papers/birthday-wish.png" },
   { id: "weddingivory", name: "Just married", color: "#f6efe2", ink: "#8d692a", previewImage: "/papers/wedding-ivory.png" },
   { id: "weddingforest", name: "Forest wedding", color: "#123d2e", ink: "#d9ad43", previewImage: "/papers/wedding-forest-custom.png" },
+  { id: "graduation", name: "Proud graduate", color: "#f7ecd8", ink: "#20201d", previewImage: "/papers/graduate.png" },
+  { id: "tatreez", name: "Tatreez", color: "#ead6ad", ink: "#191d14", previewImage: "/papers/tatreez.png" },
+  { id: "kuffiah", name: "Kuffiah", color: "#e7dfd0", ink: "#171717", previewImage: "/papers/kuffiah.png" },
 ];
 
 const artistPaperFrames = new Set<FrameId>([
@@ -36,6 +39,9 @@ const artistPaperFrames = new Set<FrameId>([
   "birthdaycheers",
   "birthdaywish",
   "weddingivory",
+  "graduation",
+  "tatreez",
+  "kuffiah",
 ]);
 
 export const DEFAULT_STRIP_OPTIONS: StripOptions = {

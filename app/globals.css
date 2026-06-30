@@ -145,12 +145,14 @@ button:focus-visible, input:focus-visible, label:has(input:focus-visible) {
 .printer-top { position: absolute; top: 0; left: 2%; width: 96%; height: 87px; border: 4px solid var(--ink); border-radius: 28px 22px 16px 19px; background: #d8cdb7; box-shadow: 5px 6px 0 rgba(28,37,43,.13); }
 .printer-light { position: absolute; right: 28px; top: 25px; width: 15px; height: 15px; border: 2px solid var(--ink); border-radius: 50%; background: #9aa58b; }
 .printer-slot { position: absolute; z-index: 5; top: 62px; left: 13%; width: 74%; height: 18px; border: 4px solid var(--ink); border-radius: 50%; background: #1c252b; }
-.strip-clip { position: relative; width: 100%; height: 430px; overflow: hidden; }
-.printed-strip { position: absolute; top: 0; left: 50%; width: 42%; transform: translate(-50%, -95%); border: 2px solid var(--ink); transform-origin: top center; }
+.strip-clip { position: relative; width: 100%; height: clamp(500px, 72vw, 620px); overflow: hidden; }
+.printed-strip-shell { position: absolute; top: 0; left: 50%; width: min(42%, 188px); transform: translateX(-50%); }
+.printed-strip { display: block; width: 100%; height: auto; max-height: 560px; border: 2px solid var(--ink); box-shadow: 3px 4px 0 rgba(28,37,43,.12); transform-origin: top center; }
 
 .result-shell { display: grid; width: min(1050px, 100%); align-items: center; gap: clamp(32px, 7vw, 90px); grid-template-columns: minmax(330px, 1.1fr) minmax(280px, .9fr); }
 .result-copy { padding: 24px 0; }
-.cutting-board { min-height: 620px; padding: 32px; border: 3px solid var(--ink); border-radius: 28px 22px; background: #d8d0c1; box-shadow: 7px 8px 0 rgba(28,37,43,.12); }
+.cutting-board { min-height: min(620px, calc(70svh + 64px)); padding: 32px; border: 3px solid var(--ink); border-radius: 28px 22px; background: #d8d0c1; box-shadow: 7px 8px 0 rgba(28,37,43,.12); }
+.result-strip-preview { width: min(54vw, calc(70svh / 3), 240px); }
 .cutting-board--active { cursor: crosshair; background: #d5cbb9; }
 .cut-guide { position: absolute; left: -16%; z-index: 5; width: 132%; height: 44px; border-top: 3px dashed rgba(164,77,61,.9); transform: translateY(-50%); }
 .cut-guide:hover { border-top-style: solid; }
@@ -191,8 +193,10 @@ button:focus-visible, input:focus-visible, label:has(input:focus-visible) {
   .camera-window { max-height: 57svh; }
   .editor-shell { padding: 18px 13px; border-radius: 20px; }
   .preview-stage { min-height: 430px; }
-  .cutting-board { min-height: 500px; padding: 22px 12px; }
-  .printer .strip-clip { height: 360px; }
+  .cutting-board { min-height: min(500px, calc(70svh + 44px)); padding: 22px 12px; }
+  .printer .strip-clip { height: clamp(390px, 118vw, 520px); }
+  .printed-strip-shell { width: min(44%, 168px); }
+  .printed-strip { max-height: 470px; }
 }
 
 @media (hover: hover) and (pointer: fine) {

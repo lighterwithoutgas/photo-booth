@@ -47,7 +47,7 @@ test("upload flow validates four images and opens the editor", async ({ page }) 
   await expect(page.getByRole("button", { name: "Moonlit dreams" })).toHaveAttribute("aria-pressed", "true");
   await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(handmadePreview);
   let paperPreview = await stripPreview.getAttribute("src");
-  for (const paper of ["Birthday cheers", "Birthday wish", "Just married", "Forest wedding"]) {
+  for (const paper of ["Birthday cheers", "Birthday wish", "Just married", "Proud graduate", "Tatreez", "Kuffiah", "Forest wedding"]) {
     await page.getByRole("button", { name: paper }).click();
     await expect(page.getByRole("button", { name: paper })).toHaveAttribute("aria-pressed", "true");
     await expect.poll(() => stripPreview.getAttribute("src")).not.toBe(paperPreview);
@@ -111,10 +111,20 @@ test("generates and downloads a finished strip", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: /Upload photos/ }).click();
   await page.locator('input[type="file"][multiple]').setInputFiles(fourPhotos);
   await page.getByRole("button", { name: /Style my strip/ }).click();
+  await page.getByRole("button", { name: "Kuffiah" }).click();
+  await expect(page.getByRole("button", { name: "Kuffiah" })).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("button", { name: /Print this strip/ })).toBeEnabled({ timeout: 15_000 });
   await page.getByRole("button", { name: /Print this strip/ }).click();
   await expect(page.getByRole("button", { name: "Pull out my strip" })).toBeVisible({ timeout: 10_000 });
   await page.getByRole("button", { name: "Pull out my strip" }).click();
+  const finishedStrip = page.getByRole("img", { name: "Your finished photo strip" });
+  await expect(finishedStrip).toBeVisible();
+  const finishedStripBox = await finishedStrip.boundingBox();
+  const viewport = page.viewportSize();
+  expect(finishedStripBox).not.toBeNull();
+  expect(viewport).not.toBeNull();
+  expect(finishedStripBox!.height).toBeLessThanOrEqual(viewport!.height * 0.71);
+  expect(await page.evaluate(() => window.scrollY)).toBe(0);
   const downloadPromise = page.waitForEvent("download");
   await page.getByRole("button", { name: "Download PNG" }).click();
   const download = await downloadPromise;

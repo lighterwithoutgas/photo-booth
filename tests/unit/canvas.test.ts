@@ -11,17 +11,21 @@ import {
 
 describe("strip dimensions", () => {
   it("exports a high-resolution portrait strip", () => {
-    expect(stripDimensions()).toEqual({ width: STRIP_WIDTH, height: STRIP_HEIGHT });
-    expect(STRIP_HEIGHT / STRIP_WIDTH).toBeGreaterThan(3);
+    expect(stripDimensions()).toEqual({ width: 724, height: 2172 });
+    expect(STRIP_HEIGHT / STRIP_WIDTH).toBe(3);
   });
-  it("can report scaled display dimensions", () => expect(stripDimensions(0.5)).toEqual({ width: 600, height: 1950 }));
+  it("can report scaled display dimensions", () => expect(stripDimensions(0.5)).toEqual({ width: 362, height: 1086 }));
   it("exports Instagram Stories at 9:16", () => expect(storyDimensions()).toEqual({ width: 1080, height: 1920 }));
-  it("preserves the artist paper's original aspect ratio", () => {
-    expect(coupleStripDimensions()).toEqual({ width: 1200, height: 4386 });
-    expect(paperStripDimensions("moonlit")).toEqual({ width: 1200, height: 3600 });
-    expect(paperStripDimensions("botanical", 0.5)).toEqual({ width: 600, height: 1800 });
-    expect(paperStripDimensions("birthdaycheers")).toEqual({ width: 1200, height: 3600 });
-    expect(paperStripDimensions("weddingforest")).toEqual({ width: 1200, height: 3946 });
+  it("normalizes every paper to the same output size", () => {
+    expect(coupleStripDimensions()).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("cream")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("moonlit")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("botanical", 0.5)).toEqual({ width: 362, height: 1086 });
+    expect(paperStripDimensions("birthdaycheers")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("weddingforest")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("graduation")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("tatreez")).toEqual({ width: 724, height: 2172 });
+    expect(paperStripDimensions("kuffiah")).toEqual({ width: 724, height: 2172 });
   });
   it("places cut guides between artist paper photo slots", () => {
     expect(stripCutPositions("loveletters")).toEqual([

@@ -28,7 +28,10 @@ export type FrameId =
   | "birthdaycheers"
   | "birthdaywish"
   | "weddingivory"
-  | "weddingforest";
+  | "weddingforest"
+  | "graduation"
+  | "tatreez"
+  | "kuffiah";
 export type BorderId = "ink" | "soft" | "none";
 
 export interface PhotoPosition {

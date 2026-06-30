@@ -31,6 +31,10 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
 
   useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, []);
+
+  useEffect(() => {
     let active = true;
     Promise.all(photos.map(async (photo, index) => {
       const image = await renderIndividualPhoto(photo, options.filter, options.photoPositions[index]);
@@ -122,7 +126,7 @@ export function ResultScreen({ blob, photos, options, onCustomize, onStartOver }
 
       <div className={`cutting-board ${cutting ? "cutting-board--active" : ""}`}>
         <motion.div
-          className="relative mx-auto w-[min(58vw,290px)]"
+          className="result-strip-preview relative mx-auto"
           animate={{ transform: cutting && !reduceMotion ? "rotate(-1deg) scale(1.02)" : "rotate(.7deg) scale(1)" }}
         >
           {/* Canvas object URLs are intentionally rendered directly. */}

@@ -13,6 +13,7 @@ export function PrintingAnimation({ blob, onComplete }: PrintingAnimationProps) 
   const [progress, setProgress] = useState(0);
   const reduceMotion = useReducedMotion();
   const url = useMemo(() => URL.createObjectURL(blob), [blob]);
+  const stripOffset = Math.max(-95, -95 + progress * 0.95);
 
   useEffect(() => () => URL.revokeObjectURL(url), [url]);
 
@@ -40,13 +41,15 @@ export function PrintingAnimation({ blob, onComplete }: PrintingAnimationProps) 
         <div className="printer-top"><span className="printer-light" /></div>
         <div className="printer-slot" />
         <div className="strip-clip">
-          <motion.img
-            src={url}
-            alt="Your printed photo strip"
-            className="printed-strip"
-            animate={{ transform: `translateY(${Math.max(-95, -95 + progress * 0.95)}%) rotate(${progress < 100 ? -0.7 : 0.6}deg)` }}
-            transition={{ ease: "linear", duration: 0.12 }}
-          />
+          <div className="printed-strip-shell">
+            <motion.img
+              src={url}
+              alt="Your printed photo strip"
+              className="printed-strip"
+              animate={{ y: `${stripOffset}%`, rotate: progress < 100 ? -0.7 : 0.6 }}
+              transition={{ ease: "linear", duration: 0.12 }}
+            />
+          </div>
         </div>
       </div>
       <div className="mt-8 flex flex-col items-center gap-4">

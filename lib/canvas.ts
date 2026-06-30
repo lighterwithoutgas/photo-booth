@@ -2,10 +2,12 @@ import { applyFilterToImageData } from "@/lib/filters";
 import { calculateCoverCrop } from "@/lib/imageCrop";
 import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
 
-export const STRIP_WIDTH = 1200;
-export const STRIP_HEIGHT = 3900;
+export const STRIP_WIDTH = 724;
+export const STRIP_HEIGHT = 2172;
 export const STORY_WIDTH = 1080;
 export const STORY_HEIGHT = 1920;
+const SOLID_DESIGN_WIDTH = 1200;
+const SOLID_DESIGN_HEIGHT = 3600;
 const PHOTO_X = 105;
 const PHOTO_WIDTH = 990;
 const PHOTO_HEIGHT = 720;
@@ -133,6 +135,39 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
       color: "#d9ad43",
     },
   },
+  graduation: {
+    image: "/papers/graduate.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 137, top: 214, right: 568, bottom: 572 },
+      { left: 137, top: 622, right: 568, bottom: 978 },
+      { left: 137, top: 1029, right: 568, bottom: 1386 },
+      { left: 137, top: 1440, right: 568, bottom: 1799 },
+    ],
+    radius: 26,
+  },
+  tatreez: {
+    image: "/papers/tatreez.png",
+    source: { x: 0, y: 0, width: 725, height: 2170 },
+    slots: [
+      { left: 126, top: 276, right: 595, bottom: 663 },
+      { left: 126, top: 756, right: 595, bottom: 1108 },
+      { left: 126, top: 1205, right: 595, bottom: 1558 },
+      { left: 126, top: 1653, right: 595, bottom: 2006 },
+    ],
+    radius: 35,
+  },
+  kuffiah: {
+    image: "/papers/kuffiah.png",
+    source: { x: 0, y: 0, width: 724, height: 2172 },
+    slots: [
+      { left: 88, top: 91, right: 594, bottom: 493 },
+      { left: 88, top: 546, right: 594, bottom: 944 },
+      { left: 88, top: 997, right: 594, bottom: 1393 },
+      { left: 88, top: 1446, right: 594, bottom: 1845 },
+    ],
+    radius: 29,
+  },
 };
 
 const framePalette: Record<FrameId, { background: string; ink: string; accent: string }> = {
@@ -153,6 +188,9 @@ const framePalette: Record<FrameId, { background: string; ink: string; accent: s
   birthdaywish: { background: "#d8c0eb", ink: "#201c25", accent: "#ed6f9e" },
   weddingivory: { background: "#f6efe2", ink: "#4d463d", accent: "#b58a39" },
   weddingforest: { background: "#123d2e", ink: "#f5e5b7", accent: "#d9ad43" },
+  graduation: { background: "#f7ecd8", ink: "#20201d", accent: "#b48425" },
+  tatreez: { background: "#ead6ad", ink: "#191d14", accent: "#a51f12" },
+  kuffiah: { background: "#e7dfd0", ink: "#171717", accent: "#9d2018" },
 };
 
 export function stripDimensions(scale = 1): { width: number; height: number } {
@@ -167,10 +205,8 @@ export function coupleStripDimensions(scale = 1): { width: number; height: numbe
   return paperStripDimensions("couple", scale);
 }
 
-export function paperStripDimensions(frame: FrameId, scale = 1): { width: number; height: number } {
-  const template = PAPER_TEMPLATES[frame];
-  const height = template ? Math.round((template.source.height / template.source.width) * STRIP_WIDTH) : STRIP_HEIGHT;
-  return { width: STRIP_WIDTH * scale, height: height * scale };
+export function paperStripDimensions(_frame: FrameId, scale = 1): { width: number; height: number } {
+  return { width: STRIP_WIDTH * scale, height: STRIP_HEIGHT * scale };
 }
 
 export function stripCutPositions(frame: FrameId): [number, number, number] {
@@ -218,23 +254,23 @@ function drawVintagePaper(context: CanvasRenderingContext2D, frame: FrameId, ink
   if (!(["couple", "friends", "birthday", "doodle"] as FrameId[]).includes(frame)) return;
 
   context.save();
-  const wash = context.createLinearGradient(0, 0, STRIP_WIDTH, STRIP_HEIGHT);
+  const wash = context.createLinearGradient(0, 0, SOLID_DESIGN_WIDTH, SOLID_DESIGN_HEIGHT);
   wash.addColorStop(0, "rgba(255,248,225,.12)");
   wash.addColorStop(0.48, "rgba(113,65,48,.025)");
   wash.addColorStop(1, "rgba(255,248,225,.08)");
   context.fillStyle = wash;
-  context.fillRect(0, 0, STRIP_WIDTH, STRIP_HEIGHT);
+  context.fillRect(0, 0, SOLID_DESIGN_WIDTH, SOLID_DESIGN_HEIGHT);
 
   context.globalAlpha = 0.045;
   context.fillStyle = ink;
-  context.fillRect(0, 0, 12, STRIP_HEIGHT);
-  context.fillRect(STRIP_WIDTH - 9, 0, 9, STRIP_HEIGHT);
-  context.fillRect(0, 0, STRIP_WIDTH, 8);
-  context.fillRect(0, STRIP_HEIGHT - 7, STRIP_WIDTH, 7);
+  context.fillRect(0, 0, 12, SOLID_DESIGN_HEIGHT);
+  context.fillRect(SOLID_DESIGN_WIDTH - 9, 0, 9, SOLID_DESIGN_HEIGHT);
+  context.fillRect(0, 0, SOLID_DESIGN_WIDTH, 8);
+  context.fillRect(0, SOLID_DESIGN_HEIGHT - 7, SOLID_DESIGN_WIDTH, 7);
 
   for (let index = 0; index < 280; index += 1) {
-    const x = seededUnit(index + 11) * STRIP_WIDTH;
-    const y = seededUnit(index + 701) * STRIP_HEIGHT;
+    const x = seededUnit(index + 11) * SOLID_DESIGN_WIDTH;
+    const y = seededUnit(index + 701) * SOLID_DESIGN_HEIGHT;
     const radius = 0.8 + seededUnit(index + 1401) * 2.8;
     context.globalAlpha = 0.035 + seededUnit(index + 2101) * 0.045;
     context.fillStyle = index % 4 === 0 ? "#fff8e9" : ink;
@@ -247,8 +283,8 @@ function drawVintagePaper(context: CanvasRenderingContext2D, frame: FrameId, ink
   context.strokeStyle = ink;
   context.lineWidth = 2;
   for (let index = 0; index < 18; index += 1) {
-    const y = 80 + seededUnit(index + 4001) * (STRIP_HEIGHT - 160);
-    const x = seededUnit(index + 5001) * STRIP_WIDTH;
+    const y = 80 + seededUnit(index + 4001) * (SOLID_DESIGN_HEIGHT - 160);
+    const x = seededUnit(index + 5001) * SOLID_DESIGN_WIDTH;
     roughLine(context, x, y, x + 8 + seededUnit(index + 6001) * 24, y + seededUnit(index + 7001) * 5, 2);
   }
   context.restore();
@@ -287,12 +323,13 @@ function handStroke(
 
 function templateSlot(template: PaperTemplate, index: number): { x: number; y: number; width: number; height: number } {
   const source = template.slots[index];
-  const scale = STRIP_WIDTH / template.source.width;
+  const scaleX = STRIP_WIDTH / template.source.width;
+  const scaleY = STRIP_HEIGHT / template.source.height;
   return {
-    x: source.left * scale,
-    y: source.top * scale,
-    width: (source.right - source.left) * scale,
-    height: (source.bottom - source.top) * scale,
+    x: source.left * scaleX,
+    y: source.top * scaleY,
+    width: (source.right - source.left) * scaleX,
+    height: (source.bottom - source.top) * scaleY,
   };
 }
 
@@ -309,7 +346,7 @@ function traceTemplateSlot(context: CanvasRenderingContext2D, template: PaperTem
     return;
   }
 
-  const radius = template.radius * (STRIP_WIDTH / template.source.width);
+  const radius = template.radius * Math.min(STRIP_WIDTH / template.source.width, STRIP_HEIGHT / template.source.height);
   context.moveTo(slot.x + radius, slot.y);
   context.lineTo(slot.x + slot.width - radius, slot.y);
   context.quadraticCurveTo(slot.x + slot.width, slot.y, slot.x + slot.width, slot.y + radius);
@@ -337,23 +374,25 @@ async function drawTemplateNames(
   if (!template.names) return;
   if (document.fonts) await document.fonts.load("100px 'Great Vibes'");
 
-  const scale = STRIP_WIDTH / template.source.width;
+  const scaleX = STRIP_WIDTH / template.source.width;
+  const scaleY = STRIP_HEIGHT / template.source.height;
+  const fontScale = Math.min(scaleX, scaleY);
   const names = template.names;
   const firstName = options.weddingNameOne.trim();
   const secondName = options.weddingNameTwo.trim();
-  const centerX = names.centerX * scale;
-  const maxWidth = names.maxWidth * scale;
-  const baseFontSize = names.fontSize * scale;
+  const centerX = names.centerX * scaleX;
+  const maxWidth = names.maxWidth * scaleX;
+  const baseFontSize = names.fontSize * fontScale;
 
   const drawFittedText = (text: string, y: number, size = baseFontSize) => {
     if (!text) return;
     let fontSize = size;
     context.font = `${fontSize}px 'Great Vibes', 'Segoe Script', cursive`;
-    while (context.measureText(text).width > maxWidth && fontSize > 44) {
+    while (context.measureText(text).width > maxWidth && fontSize > 44 * fontScale) {
       fontSize -= 4;
       context.font = `${fontSize}px 'Great Vibes', 'Segoe Script', cursive`;
     }
-    context.fillText(text, centerX, y * scale);
+    context.fillText(text, centerX, y * scaleY);
   };
 
   context.save();
@@ -361,8 +400,8 @@ async function drawTemplateNames(
   context.textAlign = "center";
   context.textBaseline = "middle";
   context.shadowColor = "rgba(53, 35, 8, .24)";
-  context.shadowBlur = 1.5 * scale;
-  context.shadowOffsetY = 0.8 * scale;
+  context.shadowBlur = 1.5 * fontScale;
+  context.shadowOffsetY = 0.8 * fontScale;
   drawFittedText(firstName, names.firstY);
   if (firstName && secondName) drawFittedText("&", names.ampersandY, baseFontSize * 0.58);
   drawFittedText(secondName, names.secondY);
@@ -377,8 +416,8 @@ function drawDoodles(context: CanvasRenderingContext2D, color: string): void {
   const stars = [
     [50, 58],
     [1140, 76],
-    [64, 3650],
-    [1132, 3580],
+    [64, 3500],
+    [1132, 3440],
   ];
   stars.forEach(([x, y], index) => {
     const size = index % 2 ? 22 : 30;
@@ -510,8 +549,13 @@ export async function renderStripCanvas(
   const template = PAPER_TEMPLATES[options.frame];
   const canvas = document.createElement("canvas");
   canvas.width = STRIP_WIDTH;
-  canvas.height = paperStripDimensions(options.frame).height;
-  const context = canvas.getContext("2d", { alpha: format === "image/png" });
+  canvas.height = STRIP_HEIGHT;
+  const renderCanvas = template ? canvas : document.createElement("canvas");
+  if (!template) {
+    renderCanvas.width = SOLID_DESIGN_WIDTH;
+    renderCanvas.height = SOLID_DESIGN_HEIGHT;
+  }
+  const context = renderCanvas.getContext("2d", { alpha: format === "image/png" });
   if (!context) throw new Error("Canvas is not supported by this browser.");
 
   const palette = framePalette[options.frame];
@@ -521,7 +565,7 @@ export async function renderStripCanvas(
     context.drawImage(artwork, source.x, source.y, source.width, source.height, 0, 0, canvas.width, canvas.height);
   } else {
     context.fillStyle = palette.background;
-    context.fillRect(0, 0, canvas.width, canvas.height);
+    context.fillRect(0, 0, renderCanvas.width, renderCanvas.height);
     drawVintagePaper(context, options.frame, palette.ink);
   }
 
@@ -585,12 +629,12 @@ export async function renderStripCanvas(
   context.textAlign = "center";
   context.globalAlpha = handmadePaper ? 0.88 : 1;
   context.font = handmadePaper ? "700 58px 'Segoe Print', cursive" : "700 56px 'Trebuchet MS', sans-serif";
-  context.fillText(options.footerText || "tiny moments, kept", STRIP_WIDTH / 2, footerY);
+  context.fillText(options.footerText || "tiny moments, kept", SOLID_DESIGN_WIDTH / 2, footerY);
   context.font = handmadePaper ? "italic 34px Georgia, serif" : "34px 'Trebuchet MS', sans-serif";
   const date = options.showDate
     ? new Intl.DateTimeFormat("en", { month: "short", day: "numeric", year: "numeric" }).format(new Date())
     : "";
-  context.fillText(date, STRIP_WIDTH / 2, footerY + 68);
+  context.fillText(date, SOLID_DESIGN_WIDTH / 2, footerY + 68);
   if (handmadePaper) {
     handStroke(context, () => {
       context.beginPath();
@@ -604,6 +648,9 @@ export async function renderStripCanvas(
   }
   context.restore();
 
+  const outputContext = canvas.getContext("2d", { alpha: format === "image/png" });
+  if (!outputContext) throw new Error("Canvas is not supported by this browser.");
+  outputContext.drawImage(renderCanvas, 0, 0, canvas.width, canvas.height);
   return canvas;
 }
 
@@ -612,6 +659,7 @@ export async function renderStoryCanvas(
   options: StripOptions,
 ): Promise<HTMLCanvasElement> {
   const strip = await renderStripCanvas(photos, options);
+  const template = PAPER_TEMPLATES[options.frame];
   const canvas = document.createElement("canvas");
   canvas.width = STORY_WIDTH;
   canvas.height = STORY_HEIGHT;
@@ -622,23 +670,35 @@ export async function renderStoryCanvas(
   context.fillStyle = palette.background;
   context.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
 
+  const paper = template ? await loadImage(template.image) : strip;
+  const paperSource = template?.source ?? { x: 0, y: 0, width: strip.width, height: strip.height };
+  const paperCrop = calculateCoverCrop(
+    paperSource.width,
+    paperSource.height,
+    STORY_WIDTH,
+    STORY_HEIGHT,
+    { x: 0, y: 0 },
+  );
   context.save();
-  context.globalAlpha = 0.18;
-  context.fillStyle = palette.accent;
-  context.beginPath();
-  context.ellipse(155, 215, 330, 420, -0.35, 0, Math.PI * 2);
-  context.ellipse(940, 1570, 410, 520, 0.22, 0, Math.PI * 2);
-  context.fill();
-  context.globalAlpha = 0.08;
-  context.fillStyle = palette.ink;
-  for (let index = 0; index < 90; index += 1) {
-    const x = seededUnit(index + 8101) * STORY_WIDTH;
-    const y = seededUnit(index + 9101) * STORY_HEIGHT;
-    const radius = 1 + seededUnit(index + 10101) * 2.4;
-    context.beginPath();
-    context.arc(x, y, radius, 0, Math.PI * 2);
-    context.fill();
-  }
+  context.globalAlpha = 0.82;
+  context.filter = "blur(18px) saturate(.9)";
+  context.drawImage(
+    paper,
+    paperSource.x + paperCrop.sx,
+    paperSource.y + paperCrop.sy,
+    paperCrop.sw,
+    paperCrop.sh,
+    -24,
+    -24,
+    STORY_WIDTH + 48,
+    STORY_HEIGHT + 48,
+  );
+  context.restore();
+
+  context.save();
+  context.globalAlpha = 0.22;
+  context.fillStyle = palette.background;
+  context.fillRect(0, 0, STORY_WIDTH, STORY_HEIGHT);
   context.restore();
 
   const maxStripWidth = 640;
