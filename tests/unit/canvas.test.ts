@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   coupleStripDimensions,
   paperStripDimensions,
+  photoSlotAspect,
   STRIP_HEIGHT,
   STRIP_WIDTH,
   stripCutPositions,
@@ -33,5 +34,9 @@ describe("strip dimensions", () => {
       ((1058 + 1147) / 2 / 2172) * 100,
       ((1553 + 1641) / 2 / 2172) * 100,
     ]);
+  });
+  it("matches the Kuffiah artwork window proportions", () => {
+    expect(photoSlotAspect("kuffiah", 0)).toBeCloseTo(535 / 419);
+    expect(photoSlotAspect("kuffiah", 3)).toBeCloseTo(535 / 447);
   });
 });

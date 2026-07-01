@@ -161,12 +161,12 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
     image: "/papers/kuffiah.png",
     source: { x: 0, y: 0, width: 724, height: 2172 },
     slots: [
-      { left: 88, top: 91, right: 594, bottom: 493 },
-      { left: 88, top: 546, right: 594, bottom: 944 },
-      { left: 88, top: 997, right: 594, bottom: 1393 },
-      { left: 88, top: 1446, right: 594, bottom: 1845 },
+      { left: 94, top: 101, right: 629, bottom: 520 },
+      { left: 94, top: 552, right: 629, bottom: 998 },
+      { left: 94, top: 1030, right: 629, bottom: 1474 },
+      { left: 94, top: 1506, right: 629, bottom: 1953 },
     ],
-    radius: 29,
+    radius: 27,
   },
 };
 
