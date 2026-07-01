@@ -113,7 +113,6 @@ test("generates and downloads a finished strip", async ({ page }, testInfo) => {
   await page.getByRole("button", { name: /Style my strip/ }).click();
   await page.getByRole("button", { name: "Kuffiah" }).click();
   await expect(page.getByRole("button", { name: "Kuffiah" })).toHaveAttribute("aria-pressed", "true");
-  await expect(page.getByText("Full photo fitted")).toBeVisible();
   await expect(page.getByRole("button", { name: /Print this strip/ })).toBeEnabled({ timeout: 15_000 });
   await page.getByRole("button", { name: /Print this strip/ }).click();
   await expect(page.getByRole("button", { name: "Pull out my strip" })).toBeVisible({ timeout: 10_000 });

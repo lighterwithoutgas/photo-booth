@@ -1,5 +1,5 @@
 import { applyFilterToImageData } from "@/lib/filters";
-import { calculateContainPlacement, calculateCoverCrop } from "@/lib/imageCrop";
+import { calculateCoverCrop } from "@/lib/imageCrop";
 import type { FrameId, PhotoItem, StripOptions } from "@/types/photo";
 
 export const STRIP_WIDTH = 724;
@@ -18,7 +18,6 @@ interface PaperTemplate {
   image: string;
   source: { x: number; y: number; width: number; height: number };
   slots: { left: number; top: number; right: number; bottom: number }[];
-  fit?: "cover" | "contain";
   radius?: number;
   names?: {
     centerX: number;
@@ -161,7 +160,6 @@ const PAPER_TEMPLATES: Partial<Record<FrameId, PaperTemplate>> = {
   kuffiah: {
     image: "/papers/kuffiah.png",
     source: { x: 0, y: 0, width: 724, height: 2172 },
-    fit: "contain",
     slots: [
       { left: 94, top: 101, right: 629, bottom: 520 },
       { left: 94, top: 552, right: 629, bottom: 998 },
@@ -582,19 +580,14 @@ export async function renderStripCanvas(
     photoCanvas.height = targetHeight;
     const photoContext = photoCanvas.getContext("2d", { willReadFrequently: options.filter !== "original" });
     if (!photoContext) throw new Error("Canvas is not supported by this browser.");
-    if (template?.fit === "contain") {
-      const placement = calculateContainPlacement(image.naturalWidth, image.naturalHeight, targetWidth, targetHeight);
-      photoContext.drawImage(image, 0, 0, image.naturalWidth, image.naturalHeight, placement.dx, placement.dy, placement.dw, placement.dh);
-    } else {
-      const crop = calculateCoverCrop(
-        image.naturalWidth,
-        image.naturalHeight,
-        targetWidth,
-        targetHeight,
-        options.photoPositions[index],
-      );
-      photoContext.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, targetWidth, targetHeight);
-    }
+    const crop = calculateCoverCrop(
+      image.naturalWidth,
+      image.naturalHeight,
+      targetWidth,
+      targetHeight,
+      options.photoPositions[index],
+    );
+    photoContext.drawImage(image, crop.sx, crop.sy, crop.sw, crop.sh, 0, 0, targetWidth, targetHeight);
     if (options.filter !== "original") {
       const pixels = photoContext.getImageData(0, 0, targetWidth, targetHeight);
       photoContext.putImageData(applyFilterToImageData(pixels, options.filter), 0, 0);

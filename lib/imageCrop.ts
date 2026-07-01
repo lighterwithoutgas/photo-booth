@@ -10,29 +10,6 @@ export interface CropPosition {
   y: number;
 }
 
-export interface ContainPlacement {
-  dx: number;
-  dy: number;
-  dw: number;
-  dh: number;
-}
-
-export function calculateContainPlacement(
-  sourceWidth: number,
-  sourceHeight: number,
-  targetWidth: number,
-  targetHeight: number,
-): ContainPlacement {
-  if ([sourceWidth, sourceHeight, targetWidth, targetHeight].some((value) => value <= 0)) {
-    throw new Error("Image and target dimensions must be positive.");
-  }
-
-  const scale = Math.min(targetWidth / sourceWidth, targetHeight / sourceHeight);
-  const dw = sourceWidth * scale;
-  const dh = sourceHeight * scale;
-  return { dx: (targetWidth - dw) / 2, dy: (targetHeight - dh) / 2, dw, dh };
-}
-
 export function calculateCoverCrop(
   sourceWidth: number,
   sourceHeight: number,
