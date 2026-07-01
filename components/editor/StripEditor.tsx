@@ -71,6 +71,7 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
   const [selectedPhoto, setSelectedPhoto] = useState(0);
   const [draftPosition, setDraftPosition] = useState<PhotoPosition>(options.photoPositions[0] ?? { x: 0, y: 0 });
   const [dragging, setDragging] = useState(false);
+  const fitsWholePhoto = options.frame === "kuffiah";
   const dragRef = useRef<{
     pointerId: number;
     startX: number;
@@ -256,15 +257,15 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
           <div className="photo-adjuster">
             <div
               className="photo-adjuster-canvas"
-              data-dragging={dragging}
+              data-dragging={!fitsWholePhoto && dragging}
               style={{ aspectRatio: photoSlotAspect(options.frame, selectedPhoto) }}
-              onPointerDown={startDrag}
-              onPointerMove={moveDrag}
-              onPointerUp={finishDrag}
-              onPointerCancel={finishDrag}
-              onKeyDown={adjustWithKeyboard}
-              tabIndex={0}
-              aria-label={`Adjust photo ${selectedPhoto + 1}`}
+              onPointerDown={fitsWholePhoto ? undefined : startDrag}
+              onPointerMove={fitsWholePhoto ? undefined : moveDrag}
+              onPointerUp={fitsWholePhoto ? undefined : finishDrag}
+              onPointerCancel={fitsWholePhoto ? undefined : finishDrag}
+              onKeyDown={fitsWholePhoto ? undefined : adjustWithKeyboard}
+              tabIndex={fitsWholePhoto ? -1 : 0}
+              aria-label={fitsWholePhoto ? `Photo ${selectedPhoto + 1} fitted inside frame` : `Adjust photo ${selectedPhoto + 1}`}
             >
               {/* Object URLs stay local and need direct rendering for crop adjustment. */}
               {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -272,10 +273,15 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
                 src={photos[selectedPhoto].url}
                 alt=""
                 className="photo-adjuster-image"
-                style={{ objectPosition: `${50 + draftPosition.x * 50}% ${50 + draftPosition.y * 50}%` }}
+                style={{
+                  objectFit: fitsWholePhoto ? "contain" : "cover",
+                  objectPosition: `${50 + draftPosition.x * 50}% ${50 + draftPosition.y * 50}%`,
+                }}
                 draggable={false}
               />
-              <span className="photo-adjuster-hint"><Move size={16} /> Drag to reposition</span>
+              <span className="photo-adjuster-hint">
+                {fitsWholePhoto ? <><Check size={16} /> Full photo fitted</> : <><Move size={16} /> Drag to reposition</>}
+              </span>
             </div>
             <div className="photo-adjuster-thumbs" aria-label="Choose a photo to adjust">
               {photos.map((photo, index) => {
@@ -288,6 +294,9 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
                     style={{
                       backgroundImage: `url(${photo.url})`,
                       backgroundPosition: `${50 + position.x * 50}% ${50 + position.y * 50}%`,
+                      backgroundSize: fitsWholePhoto ? "contain" : "cover",
+                      backgroundRepeat: "no-repeat",
+                      backgroundColor: fitsWholePhoto ? "#d8d0c1" : undefined,
                     }}
                     onClick={() => selectPhoto(index)}
                     aria-label={`Photo ${index + 1}`}
@@ -299,17 +308,19 @@ export function StripEditor({ photos, options, onOptionsChange, onConfirm, onBac
               })}
             </div>
             <div className="flex flex-wrap items-center gap-4">
-              <button
-                type="button"
-                className="text-link text-sm"
-                onClick={() => {
-                  const centered = { x: 0, y: 0 };
-                  setDraftPosition(centered);
-                  commitPosition(centered);
-                }}
-              >
-                Center photo {selectedPhoto + 1}
-              </button>
+              {!fitsWholePhoto && (
+                <button
+                  type="button"
+                  className="text-link text-sm"
+                  onClick={() => {
+                    const centered = { x: 0, y: 0 };
+                    setDraftPosition(centered);
+                    commitPosition(centered);
+                  }}
+                >
+                  Center photo {selectedPhoto + 1}
+                </button>
+              )}
               {onRetakePhoto && (
                 <button
                   type="button"

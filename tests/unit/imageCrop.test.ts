@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { calculateCoverCrop } from "@/lib/imageCrop";
+import { calculateContainPlacement, calculateCoverCrop } from "@/lib/imageCrop";
 
 describe("calculateCoverCrop", () => {
   it("crops wide images from both sides", () => {
@@ -22,5 +22,19 @@ describe("calculateCoverCrop", () => {
 
   it("rejects invalid dimensions", () => {
     expect(() => calculateCoverCrop(0, 100, 20, 20)).toThrow();
+  });
+});
+
+describe("calculateContainPlacement", () => {
+  it("fits wide images inside the target without cropping", () => {
+    expect(calculateContainPlacement(1600, 900, 400, 300)).toEqual({ dx: 0, dy: 37.5, dw: 400, dh: 225 });
+  });
+
+  it("fits tall images inside the target without cropping", () => {
+    expect(calculateContainPlacement(900, 1600, 400, 300)).toEqual({ dx: 115.625, dy: 0, dw: 168.75, dh: 300 });
+  });
+
+  it("rejects invalid dimensions", () => {
+    expect(() => calculateContainPlacement(100, 0, 20, 20)).toThrow();
   });
 });
