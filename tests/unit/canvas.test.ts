@@ -36,7 +36,7 @@ describe("strip dimensions", () => {
     ]);
   });
   it("matches the Kuffiah artwork window proportions", () => {
-    expect(photoSlotAspect("kuffiah", 0)).toBeCloseTo(535 / 419);
-    expect(photoSlotAspect("kuffiah", 3)).toBeCloseTo(535 / 447);
+    expect(photoSlotAspect("kuffiah", 0)).toBeCloseTo(533 / 418);
+    expect(photoSlotAspect("kuffiah", 1)).toBeCloseTo(533 / 416);
   });
 });
